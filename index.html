@@ -53,7 +53,6 @@
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-secondary { background-color: #f1f5f9; color: #475569; }
         
-        /* BOTÓN DE IMPRESIÓN FORZADO A SER VISIBLE SIEMPRE EN PANTALLA */
         .btn-print-screen { background-color: var(--success) !important; color: white !important; margin-top: 25px !important; display: inline-flex !important; width: 100% !important; }
         .btn-print-screen:hover { background-color: #059669 !important; }
         
@@ -70,6 +69,10 @@
         .item-procedure { margin-top: 6px; background: #fafafa; padding: 10px; border-left: 3px solid var(--accent); font-size: 12px; color: #4b5563; line-height: 1.6; }
         .item-procedure div { font-family: monospace; font-size: 11px; margin-top: 4px; color: #0f172a; }
         
+        /* ESTILO PARA EL BLOQUE DE CITAS LEGALES */
+        .legal-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 15px; margin-top: 20px; font-size: 12px; color: #166534; line-height: 1.5; }
+        .legal-box strong { color: #14532d; display: block; margin-bottom: 4px; font-size: 13px; }
+
         .total-box-wrapper { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: 12px; padding: 25px; text-align: center; margin-top: 25px; box-shadow: var(--shadow-lg); }
         .total-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; opacity: 0.8; }
         .total-amount { font-size: 32px; font-weight: 800; margin: 8px 0; color: #38bdf8; }
@@ -80,13 +83,13 @@
             .form-row { flex-direction: column; gap: 0; }
         }
 
-        /* CORRECCIÓN DE IMPRESIÓN SÓLO PARA EL MOMENTO DE GENERAR EL ARCHIVO */
         @media print {
             body { background-color: #fff !important; color: #000 !important; padding: 0 !important; }
             .calculator-card, .main-header, .action-buttons, .empty-state, #btnImprimir { display: none !important; }
             .content-grid { display: block !important; }
             .results-card { width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
             .item-procedure { background: #fff !important; border-left: 2px solid #000 !important; }
+            .legal-box { background: #fff !important; border: 1px solid #000 !important; color: #000 !important; }
             .total-box-wrapper { background: #f1f5f9 !important; color: #000 !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
             .total-amount { color: #0f172a !important; }
         }
@@ -188,7 +191,7 @@
                         <div class="summary-item"><strong>Salario Diario (SD):</strong> <span id="outSD">-</span></div>
                     </div>
 
-                    <div class="breakdown-section-title">Prestaciones Devengadas (Finiquito)</div>
+                    <div class="breakdown-section-title" id="tituloSeccionPrestaciones">Prestaciones Devengadas (Finiquito)</div>
                     <div class="breakdown-list">
                         <div class="breakdown-item">
                             <div class="item-header">
@@ -221,10 +224,43 @@
                             </div>
                             <div class="item-procedure" id="procAguinaldo"></div>
                         </div>
+
+                        <div id="bloqueLiquidacion" style="display:none;">
+                            <div class="breakdown-section-title">Indemnizaciones de Ley (Liquidación)</div>
+                            
+                            <div class="breakdown-item">
+                                <div class="item-header">
+                                    <span><i class="fa-solid fa-gavel"></i> Indemnización Constitucional (3 meses)</span>
+                                    <span class="item-value" id="valTresMeses">$0.00</span>
+                                </div>
+                                <div class="item-procedure" id="procTresMeses"></div>
+                            </div>
+
+                            <div class="breakdown-item">
+                                <div class="item-header">
+                                    <span><i class="fa-solid fa-calendar-days"></i> 20 Días por Año de Servicios</span>
+                                    <span class="item-value" id="valVeinteDias">$0.00</span>
+                                </div>
+                                <div class="item-procedure" id="procVeinteDias"></div>
+                            </div>
+
+                            <div class="breakdown-item">
+                                <div class="item-header">
+                                    <span><i class="fa-solid fa-id-card"></i> Prima de Antigüedad (12 días/año)</span>
+                                    <span class="item-value" id="valPrimaAntiguedad">$0.00</span>
+                                </div>
+                                <div class="item-procedure" id="procPrimaAntiguedad"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="legal-box" id="legalBox">
+                        <strong><i class="fa-solid fa-scale-balanced"></i> Sustento Jurídico (LFT):</strong>
+                        <span id="legalText">-</span>
                     </div>
 
                     <div class="total-box-wrapper">
-                        <div class="total-label">TOTAL NETO ESTIMADO</div>
+                        <div class="total-label" id="labelGranTotal">TOTAL NETO ESTIMADO</div>
                         <div class="total-amount" id="valTotalFiniquito">$0.00 MXN</div>
                     </div>
 
@@ -264,6 +300,7 @@
                 const fSalida = new Date(document.getElementById("fechaSalida").value + "T00:00:00");
                 const montoInput = parseFloat(document.getElementById("salarioInput").value) || 0;
                 const periodo = tipoPeriodo.value;
+                const motivo = document.getElementById("motivoSalida").value;
                 const diasVencidosInput = parseInt(document.getElementById("vacacionesPendientes").value) || 0;
 
                 let salarioDiario = 0;
@@ -281,30 +318,25 @@
                 if (dias < 0) { meses--; const ult = new Date(fSalida.getFullYear(), fSalida.getMonth(), 0).getDate(); dias += ult; }
                 if (meses < 0) { anios--; meses += 12; }
 
-                // VACACIONES (Días reales + redondeo manual)
+                let antiguedadAniosExactos = totalDiasTranscurridos / 365;
+
+                // 1. FINIQUITO BASE
                 let factorVacaciones = 12 / 365;
                 let diasVacProporcionalesNoRedondeado = factorVacaciones * totalDiasTranscurridos; 
                 let diasVacProporcionales = Math.round(diasVacProporcionalesNoRedondeado); 
 
                 let montoVacacionesProp = diasVacProporcionales * salarioDiario; 
                 let montoVacacionesVencidas = diasVencidosInput * salarioDiario;
-
-                // PRIMA VACACIONAL
                 let montoPrimaVacacional = (montoVacacionesProp + montoVacacionesVencidas) * 0.25;
 
-                // AGUINALDO (Factor manual fijo de 0.041 sobre días naturales)
                 let factorAguinaldoFijo = 0.041; 
                 let diasAguinaldoProp = factorAguinaldoFijo * totalDiasTranscurridos; 
                 let montoAguinaldo = diasAguinaldoProp * salarioDiario; 
 
-                let granTotalFinal = montoVacacionesProp + montoVacacionesVencidas + montoPrimaVacacional + montoAguinaldo;
+                let subtotalFiniquito = montoVacacionesProp + montoVacacionesVencidas + montoPrimaVacacional + montoAguinaldo;
+                let granTotalFinal = subtotalFiniquito;
 
-                // DESPLEGAR EN INTERFAZ
-                document.getElementById("outNombre").innerText = nombre;
-                document.getElementById("outAntiguedadText").innerText = `${anios} years, ${meses} months, ${dias} days`;
-                document.getElementById("outDiasTotales").innerText = totalDiasTranscurridos;
-                document.getElementById("outSD").innerText = formatMoneda(salarioDiario);
-
+                // ASIGNAR FINIQUITO EN INTERFAZ
                 document.getElementById("valVacaciones").innerText = formatMoneda(montoVacacionesProp);
                 document.getElementById("procVacaciones").innerHTML = `<strong>Días reales:</strong> (12 ÷ 365) = 0.0328 × ${totalDiasTranscurridos} días naturales = ${diasVacProporcionalesNoRedondeado.toFixed(3)} días -> Redondeado a ${diasVacProporcionales} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacacionesProp.toFixed(2)}</div>`;
 
@@ -322,6 +354,49 @@
                 document.getElementById("valAguinaldo").innerText = formatMoneda(montoAguinaldo);
                 document.getElementById("procAguinaldo").innerHTML = `<strong>Factor manual:</strong> Factor fijo de 0.041 × ${totalDiasTranscurridos} días reales = ${diasAguinaldoProp.toFixed(2)} días × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
 
+
+                // 2. LÓGICA DINÁMICA DE LIQUIDACIÓN / DESPIDO
+                if (motivo === "despido") {
+                    document.getElementById("badgeTipoConcepto").innerText = "Liquidación de Ley";
+                    document.getElementById("labelGranTotal").innerText = "TOTAL LIQUIDACIÓN NETO ESTIMADO";
+                    document.getElementById("bloqueLiquidacion").style.display = "block";
+
+                    // Cálculos de las indemnizaciones
+                    let montoTresMeses = salarioDiario * 30 * 3;
+                    let montoVeinteDias = (salarioDiario * 20) * antiguedadAniosExactos;
+                    
+                    // Prima de antigüedad (Topada a 2 salarios mínimos si aplica, aquí calculada directo con SD)
+                    let montoPrimaAntiguedad = (salarioDiario * 12) * antiguedadAniosExactos;
+
+                    granTotalFinal += (montoTresMeses + montoVeinteDias + montoPrimaAntiguedad);
+
+                    // Desplegar indemnizaciones
+                    document.getElementById("valTresMeses").innerText = formatMoneda(montoTresMeses);
+                    document.getElementById("procTresMeses").innerHTML = `<strong>Art. 48 LFT:</strong> 90 días de salario diario ($${salarioDiario.toFixed(2)} × 90)<div>= $${montoTresMeses.toFixed(2)}</div>`;
+
+                    document.getElementById("valVeinteDias").innerText = formatMoneda(montoVeinteDias);
+                    document.getElementById("procVeinteDias").innerHTML = `<strong>Art. 50 LFT:</strong> 20 días por cada año de servicios (${(antiguedadAniosExactos).toFixed(2)} años trabajados)<div>= $${montoVeinteDias.toFixed(2)}</div>`;
+
+                    document.getElementById("valPrimaAntiguedad").innerText = formatMoneda(montoPrimaAntiguedad);
+                    document.getElementById("procPrimaAntiguedad").innerHTML = `<strong>Art. 162 LFT:</strong> 12 días de salario por año laborado (${(antiguedadAniosExactos).toFixed(2)} años trabajados)<div>= $${montoPrimaAntiguedad.toFixed(2)}</div>`;
+
+                    // Cita de artículos específicos para despido
+                    document.getElementById("legalText").innerText = "Al tratarse de un Despido Injustificado, el patrón está obligado a pagar el Finiquito base (Arts. 76, 80 y 87) más la Indemnización Constitucional de 3 meses de salario (Art. 48), los 20 días por año de servicios prestados (Art. 50) y la Prima de Antigüedad consistente en 12 días por cada año (Art. 162).";
+                } else {
+                    // Si es Renuncia Voluntaria
+                    document.getElementById("badgeTipoConcepto").innerText = "Finiquito Estimado";
+                    document.getElementById("labelGranTotal").innerText = "TOTAL FINIQUITO NETO ESTIMADO";
+                    document.getElementById("bloqueLiquidacion").style.display = "none";
+                    
+                    // Cita de artículos específicos para renuncia
+                    document.getElementById("legalText").innerText = "Por Renuncia Voluntaria, al trabajador le corresponde únicamente la parte proporcional de sus prestaciones devengadas (Finiquito): Vacaciones (Art. 76), Prima Vacacional mínima del 25% (Art. 80) y Aguinaldo Proporcional (Art. 87).";
+                }
+
+                // RESUMEN GENERAL
+                document.getElementById("outNombre").innerText = nombre;
+                document.getElementById("outAntiguedadText").innerText = `${anios} años, ${meses} meses, ${dias} días`;
+                document.getElementById("outDiasTotales").innerText = totalDiasTranscurridos;
+                document.getElementById("outSD").innerText = formatMoneda(salarioDiario);
                 document.getElementById("valTotalFiniquito").innerText = `${formatMoneda(granTotalFinal)} MXN`;
 
                 emptyState.style.display = "none";
