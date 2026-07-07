@@ -53,8 +53,8 @@
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-secondary { background-color: #f1f5f9; color: #475569; }
         
-        /* ESTILO CORREGIDO PARA EL BOTÓN DE IMPRESIÓN */
-        .btn-print-screen { background-color: var(--success) !important; color: white !important; margin-top: 20px; display: inline-flex !important; width: 100%; }
+        /* BOTÓN DE IMPRESIÓN FORZADO A SER VISIBLE SIEMPRE EN PANTALLA */
+        .btn-print-screen { background-color: var(--success) !important; color: white !important; margin-top: 25px !important; display: inline-flex !important; width: 100% !important; }
         .btn-print-screen:hover { background-color: #059669 !important; }
         
         .empty-state { text-align: center; padding: 80px 20px; color: #94a3b8; }
@@ -80,10 +80,10 @@
             .form-row { flex-direction: column; gap: 0; }
         }
 
-        /* AJUSTES EXCLUSIVOS DE IMPRESIÓN (AQUÍ SÍ SE OCULTA LO DEMÁS) */
+        /* CORRECCIÓN DE IMPRESIÓN SÓLO PARA EL MOMENTO DE GENERAR EL ARCHIVO */
         @media print {
             body { background-color: #fff !important; color: #000 !important; padding: 0 !important; }
-            .calculator-card, .main-header, .action-buttons, .empty-state, .btn-print-screen { display: none !important; }
+            .calculator-card, .main-header, .action-buttons, .empty-state, #btnImprimir { display: none !important; }
             .content-grid { display: block !important; }
             .results-card { width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
             .item-procedure { background: #fff !important; border-left: 2px solid #000 !important; }
@@ -101,7 +101,6 @@
         </header>
 
         <main class="content-grid">
-            <!-- FORMULARIO -->
             <section class="card calculator-card">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-calculator"></i> Datos del Vínculo Laboral</h2>
@@ -169,7 +168,6 @@
                 </form>
             </section>
 
-            <!-- RESULTADOS -->
             <section class="card results-card" id="resultsCard">
                 <div class="empty-state" id="emptyState">
                     <i class="fa-solid fa-scale-balanced"></i>
@@ -230,7 +228,6 @@
                         <div class="total-amount" id="valTotalFiniquito">$0.00 MXN</div>
                     </div>
 
-                    <!-- BOTÓN UBICADO Y CONFIGURADO CORRECTAMENTE -->
                     <button type="button" id="btnImprimir" class="btn btn-print-screen">
                         <i class="fa-solid fa-print"></i> Imprimir Reporte / Guardar PDF
                     </button>
@@ -304,7 +301,7 @@
 
                 // DESPLEGAR EN INTERFAZ
                 document.getElementById("outNombre").innerText = nombre;
-                document.getElementById("outAntiguedadText").innerText = `${anios} años, ${meses} meses, ${dias} días`;
+                document.getElementById("outAntiguedadText").innerText = `${anios} years, ${meses} months, ${dias} days`;
                 document.getElementById("outDiasTotales").innerText = totalDiasTranscurridos;
                 document.getElementById("outSD").innerText = formatMoneda(salarioDiario);
 
