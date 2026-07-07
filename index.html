@@ -52,8 +52,10 @@
         .btn { width: 100%; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 10px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-secondary { background-color: #f1f5f9; color: #475569; }
-        .btn-success { background-color: var(--success); color: white; margin-top: 15px; }
-        .btn-success:hover { background-color: #059669; }
+        
+        /* ESTILO CORREGIDO PARA EL BOTÓN DE IMPRESIÓN */
+        .btn-print-screen { background-color: var(--success) !important; color: white !important; margin-top: 20px; display: inline-flex !important; width: 100%; }
+        .btn-print-screen:hover { background-color: #059669 !important; }
         
         .empty-state { text-align: center; padding: 80px 20px; color: #94a3b8; }
         .empty-state i { font-size: 50px; margin-bottom: 15px; }
@@ -78,11 +80,11 @@
             .form-row { flex-direction: column; gap: 0; }
         }
 
-        /* CONFIGURACIÓN EXCLUSIVA PARA LA IMPRESIÓN */
+        /* AJUSTES EXCLUSIVOS DE IMPRESIÓN (AQUÍ SÍ SE OCULTA LO DEMÁS) */
         @media print {
-            body { background-color: #fff; color: #000; padding: 0; }
-            .calculator-card, .main-header, .action-buttons, .empty-state, .btn-success { display: none !important; }
-            .content-grid { display: block; }
+            body { background-color: #fff !important; color: #000 !important; padding: 0 !important; }
+            .calculator-card, .main-header, .action-buttons, .empty-state, .btn-print-screen { display: none !important; }
+            .content-grid { display: block !important; }
             .results-card { width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
             .item-procedure { background: #fff !important; border-left: 2px solid #000 !important; }
             .total-box-wrapper { background: #f1f5f9 !important; color: #000 !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
@@ -228,8 +230,8 @@
                         <div class="total-amount" id="valTotalFiniquito">$0.00 MXN</div>
                     </div>
 
-                    <!-- BOTÓN DE IMPRESIÓN REINSTALADO -->
-                    <button type="button" id="btnImprimir" class="btn btn-success">
+                    <!-- BOTÓN UBICADO Y CONFIGURADO CORRECTAMENTE -->
+                    <button type="button" id="btnImprimir" class="btn btn-print-screen">
                         <i class="fa-solid fa-print"></i> Imprimir Reporte / Guardar PDF
                     </button>
                 </div>
@@ -272,18 +274,17 @@
                 else if (periodo === "quincenal") salarioDiario = montoInput / 15;
                 else if (periodo === "catorcenal") salarioDiario = montoInput / 14;
 
-                // CÓMPUTO REAL DE DÍAS TRANSCURRIDOS EN CALENDARIO NATURAL
+                // CÓMPUTO EN DÍAS CALENDARIO EXACTOS
                 const msPorDia = 24 * 60 * 60 * 1000;
                 const totalDiasTranscurridos = Math.round((fSalida - fIngreso) / msPorDia) + 1;
 
-                // Desglose estético de la antigüedad
                 let anios = fSalida.getFullYear() - fIngreso.getFullYear();
                 let meses = fSalida.getMonth() - fIngreso.getMonth();
                 let dias = fSalida.getDate() - fIngreso.getDate() + 1;
                 if (dias < 0) { meses--; const ult = new Date(fSalida.getFullYear(), fSalida.getMonth(), 0).getDate(); dias += ult; }
                 if (meses < 0) { anios--; meses += 12; }
 
-                // VACACIONES PROPORCIONALES (Días reales + Redondeo manual de tu libreta)
+                // VACACIONES (Días reales + redondeo manual)
                 let factorVacaciones = 12 / 365;
                 let diasVacProporcionalesNoRedondeado = factorVacaciones * totalDiasTranscurridos; 
                 let diasVacProporcionales = Math.round(diasVacProporcionalesNoRedondeado); 
@@ -291,10 +292,10 @@
                 let montoVacacionesProp = diasVacProporcionales * salarioDiario; 
                 let montoVacacionesVencidas = diasVencidosInput * salarioDiario;
 
-                // PRIMA VACACIONAL (25%)
+                // PRIMA VACACIONAL
                 let montoPrimaVacacional = (montoVacacionesProp + montoVacacionesVencidas) * 0.25;
 
-                // AGUINALDO PROPORCIONAL (Factor manual 0.041 sobre los días reales)
+                // AGUINALDO (Factor manual fijo de 0.041 sobre días naturales)
                 let factorAguinaldoFijo = 0.041; 
                 let diasAguinaldoProp = factorAguinaldoFijo * totalDiasTranscurridos; 
                 let montoAguinaldo = diasAguinaldoProp * salarioDiario; 
