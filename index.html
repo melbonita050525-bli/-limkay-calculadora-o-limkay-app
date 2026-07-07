@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Limkay | Calculadora Avanzada de Finiquito (Días Reales)</title>
+    <title>Limkay | Calculadora Avanzada de Finiquito Profesional</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -42,7 +42,6 @@
         .form-row { display: flex; gap: 15px; }
         .form-row .form-group { flex: 1; }
         label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
-        label span { color: #94a3b8; font-weight: 400; }
         input, select { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--text-dark); outline: none; background-color: #fff; }
         input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
         .input-icon-wrapper { position: relative; }
@@ -50,9 +49,11 @@
         .input-icon-wrapper input { padding-left: 30px; }
         
         .action-buttons { margin-top: 30px; }
-        .btn { width: 100%; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 10px; transition: all 0.2s; }
+        .btn { width: 100%; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 10px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-secondary { background-color: #f1f5f9; color: #475569; }
+        .btn-success { background-color: var(--success); color: white; margin-top: 15px; }
+        .btn-success:hover { background-color: #059669; }
         
         .empty-state { text-align: center; padding: 80px 20px; color: #94a3b8; }
         .empty-state i { font-size: 50px; margin-bottom: 15px; }
@@ -67,7 +68,7 @@
         .item-procedure { margin-top: 6px; background: #fafafa; padding: 10px; border-left: 3px solid var(--accent); font-size: 12px; color: #4b5563; line-height: 1.6; }
         .item-procedure div { font-family: monospace; font-size: 11px; margin-top: 4px; color: #0f172a; }
         
-        .total-box-wrapper { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: 12px; padding: 25px; text-align: center; margin-top: 30px; box-shadow: var(--shadow-lg); }
+        .total-box-wrapper { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: 12px; padding: 25px; text-align: center; margin-top: 25px; box-shadow: var(--shadow-lg); }
         .total-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; opacity: 0.8; }
         .total-amount { font-size: 32px; font-weight: 800; margin: 8px 0; color: #38bdf8; }
 
@@ -76,6 +77,17 @@
             .card { width: 100%; }
             .form-row { flex-direction: column; gap: 0; }
         }
+
+        /* CONFIGURACIÓN EXCLUSIVA PARA LA IMPRESIÓN */
+        @media print {
+            body { background-color: #fff; color: #000; padding: 0; }
+            .calculator-card, .main-header, .action-buttons, .empty-state, .btn-success { display: none !important; }
+            .content-grid { display: block; }
+            .results-card { width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+            .item-procedure { background: #fff !important; border-left: 2px solid #000 !important; }
+            .total-box-wrapper { background: #f1f5f9 !important; color: #000 !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+            .total-amount { color: #0f172a !important; }
+        }
     </style>
 </head>
 <body>
@@ -83,7 +95,7 @@
     <div class="app-container">
         <header class="main-header">
             <div class="logo">Limkay<span>.</span></div>
-            <p class="subtitle"><i class="fa-solid fa-scale-balanced"></i> Sistema de Cálculo Laboral (Días de Calendario Reales)</p>
+            <p class="subtitle"><i class="fa-solid fa-scale-balanced"></i> Sistema de Cálculo Laboral Profesional</p>
         </header>
 
         <main class="content-grid">
@@ -91,7 +103,7 @@
             <section class="card calculator-card">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-calculator"></i> Datos del Vínculo Laboral</h2>
-                    <p>Introduce los datos para calcular con días reales de calendario y redondeos manuales.</p>
+                    <p>Introduce los datos para calcular con días reales de calendario y tus redondeos manuales.</p>
                 </div>
                 
                 <form id="finiquitoForm" novalidate>
@@ -166,7 +178,7 @@
                 <div class="results-content" id="resultsContent" style="display: none;">
                     <div class="card-header highlight">
                         <h2><i class="fa-solid fa-file-invoice-dollar"></i> Desglose de Prestaciones</h2>
-                        <span class="badge" id="badgeTipoConcepto">-</span>
+                        <span class="badge" id="badgeTipoConcepto">Finiquito Estimado</span>
                     </div>
 
                     <div class="info-summary-grid">
@@ -215,6 +227,11 @@
                         <div class="total-label">TOTAL NETO ESTIMADO</div>
                         <div class="total-amount" id="valTotalFiniquito">$0.00 MXN</div>
                     </div>
+
+                    <!-- BOTÓN DE IMPRESIÓN REINSTALADO -->
+                    <button type="button" id="btnImprimir" class="btn btn-success">
+                        <i class="fa-solid fa-print"></i> Imprimir Reporte / Guardar PDF
+                    </button>
                 </div>
             </section>
         </main>
@@ -226,6 +243,7 @@
             const labelSalario = document.getElementById("labelSalario");
             const btnCalcular = document.getElementById("btnCalcular");
             const btnLimpiar = document.getElementById("btnLimpiar");
+            const btnImprimir = document.getElementById("btnImprimir");
             const form = document.getElementById("finiquitoForm");
             const emptyState = document.getElementById("emptyState");
             const resultsContent = document.getElementById("resultsContent");
@@ -239,6 +257,7 @@
 
             btnCalcular.addEventListener("click", calcularTodo);
             btnLimpiar.addEventListener("click", limpiarFormulario);
+            btnImprimir.addEventListener("click", () => { window.print(); });
 
             function calcularTodo() {
                 const nombre = document.getElementById("nombre").value || "Colaborador";
@@ -253,29 +272,29 @@
                 else if (periodo === "quincenal") salarioDiario = montoInput / 15;
                 else if (periodo === "catorcenal") salarioDiario = montoInput / 14;
 
-                // CAMBIO CLAVE: CÓMPUTO REAL DE DÍAS TRANSCURRIDOS EN CALENDARIO NATURAL
+                // CÓMPUTO REAL DE DÍAS TRANSCURRIDOS EN CALENDARIO NATURAL
                 const msPorDia = 24 * 60 * 60 * 1000;
                 const totalDiasTranscurridos = Math.round((fSalida - fIngreso) / msPorDia) + 1;
 
-                // Mostrar desglose de meses/días estéticos
+                // Desglose estético de la antigüedad
                 let anios = fSalida.getFullYear() - fIngreso.getFullYear();
                 let meses = fSalida.getMonth() - fIngreso.getMonth();
                 let dias = fSalida.getDate() - fIngreso.getDate() + 1;
                 if (dias < 0) { meses--; const ult = new Date(fSalida.getFullYear(), fSalida.getMonth(), 0).getDate(); dias += ult; }
                 if (meses < 0) { anios--; meses += 12; }
 
-                // VACACIONES PROPORCIONALES (Calculadas con los días naturales reales)
-                let factorVacaciones = 12 / 365; // 0.0328
+                // VACACIONES PROPORCIONALES (Días reales + Redondeo manual de tu libreta)
+                let factorVacaciones = 12 / 365;
                 let diasVacProporcionalesNoRedondeado = factorVacaciones * totalDiasTranscurridos; 
-                let diasVacProporcionales = Math.round(diasVacProporcionalesNoRedondeado); // Redondeo manual al entero
+                let diasVacProporcionales = Math.round(diasVacProporcionalesNoRedondeado); 
 
                 let montoVacacionesProp = diasVacProporcionales * salarioDiario; 
                 let montoVacacionesVencidas = diasVencidosInput * salarioDiario;
 
-                // PRIMA VACACIONAL
+                // PRIMA VACACIONAL (25%)
                 let montoPrimaVacacional = (montoVacacionesProp + montoVacacionesVencidas) * 0.25;
 
-                // AGUINALDO PROPORCIONAL (Usa tu factor fijo de libreta 0.041, pero sobre los días naturales reales)
+                // AGUINALDO PROPORCIONAL (Factor manual 0.041 sobre los días reales)
                 let factorAguinaldoFijo = 0.041; 
                 let diasAguinaldoProp = factorAguinaldoFijo * totalDiasTranscurridos; 
                 let montoAguinaldo = diasAguinaldoProp * salarioDiario; 
@@ -303,7 +322,7 @@
                 document.getElementById("procPrimaVacacional").innerHTML = `<strong>25% de Prima:</strong> 25% sobre total de vacaciones ($${(montoVacacionesProp + montoVacacionesVencidas).toFixed(2)})<div>= $${montoPrimaVacacional.toFixed(2)}</div>`;
 
                 document.getElementById("valAguinaldo").innerText = formatMoneda(montoAguinaldo);
-                document.getElementById("procAguinaldo").innerHTML = `<strong>Factor manual:</strong> Factor de libreta de 0.041 × ${totalDiasTranscurridos} días reales = ${diasAguinaldoProp.toFixed(2)} días × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
+                document.getElementById("procAguinaldo").innerHTML = `<strong>Factor manual:</strong> Factor fijo de 0.041 × ${totalDiasTranscurridos} días reales = ${diasAguinaldoProp.toFixed(2)} días × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
 
                 document.getElementById("valTotalFiniquito").innerText = `${formatMoneda(granTotalFinal)} MXN`;
 
