@@ -103,11 +103,10 @@
         </header>
 
         <main class="content-grid">
-            <!-- FORMULARIO -->
             <section class="card calculator-card">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-calculator"></i> Datos del Vínculo Laboral</h2>
-                    <p>Introduce los datos para calcular con días reales de calendario y tus redondeos manuales.</p>
+                    <p>Introduce los datos para calcular según el esquema de tu libreta.</p>
                 </div>
                 
                 <form id="finiquitoForm" novalidate>
@@ -153,7 +152,6 @@
                         </div>
                     </div>
 
-                    <!-- NUEVO CAMPO DE DÍAS DE AGUINALDO EMPRESARIAL -->
                     <div class="form-group">
                         <label for="diasAguinaldoBase"><i class="fa-solid fa-gift"></i> Días de aguinaldo que otorga la empresa</label>
                         <input type="number" id="diasAguinaldoBase" min="1" value="15" required>
@@ -177,12 +175,11 @@
                 </form>
             </section>
 
-            <!-- RESULTADOS -->
             <section class="card results-card" id="resultsCard">
                 <div class="empty-state" id="emptyState">
                     <i class="fa-solid fa-scale-balanced"></i>
                     <h3>Esperando Ejecución</h3>
-                    <p>Rellena los datos para ver los resultados exactos basados en días calendario reales.</p>
+                    <p>Rellena los datos para ver los resultados exactos basados en el esquema de tu libreta.</p>
                 </div>
 
                 <div class="results-content" id="resultsContent" style="display: none;">
@@ -194,7 +191,7 @@
                     <div class="info-summary-grid">
                         <div class="summary-item"><strong>Trabajador:</strong> <span id="outNombre">-</span></div>
                         <div class="summary-item"><strong>Antigüedad Real:</strong> <span id="outAntiguedadText">-</span></div>
-                        <div class="summary-item"><strong>Días Totales (Calendario Natural):</strong> <span id="outDiasTotales">-</span> días</div>
+                        <div class="summary-item"><strong>Días Totales:</strong> <span id="outDiasTotales">-</span> días</div>
                         <div class="summary-item"><strong>Salario Diario (SD):</strong> <span id="outSD">-</span></div>
                     </div>
 
@@ -232,7 +229,6 @@
                             <div class="item-procedure" id="procAguinaldo"></div>
                         </div>
 
-                        <!-- CONCEPTOS ADICIONALES DE LIQUIDACIÓN POR DESPIDO -->
                         <div id="bloqueLiquidacion" style="display:none;">
                             <div class="breakdown-section-title">Indemnizaciones de Ley (Liquidación)</div>
                             
@@ -262,7 +258,6 @@
                         </div>
                     </div>
 
-                    <!-- BLOQUE DINÁMICO DE CITAS LEGALES -->
                     <div class="legal-box" id="legalBox">
                         <strong><i class="fa-solid fa-scale-balanced"></i> Sustento Jurídico (LFT):</strong>
                         <span id="legalText">-</span>
@@ -318,7 +313,6 @@
                 else if (periodo === "quincenal") salarioDiario = montoInput / 15;
                 else if (periodo === "catorcenal") salarioDiario = montoInput / 14;
 
-                // CÓMPUTO EN DÍAS CALENDARIO EXACTOS
                 const msPorDia = 24 * 60 * 60 * 1000;
                 const totalDiasTranscurridos = Math.round((fSalida - fIngreso) / msPorDia) + 1;
 
@@ -330,18 +324,29 @@
 
                 let antiguedadAniosExactos = totalDiasTranscurridos / 365;
 
-                // 1. FINIQUITO BASE - VACACIONES PROPORCIONALES Y VENCIDAS
-                let factorVacaciones = 12 / 365;
+                // 1. VACACIONES PROPORCIONALES AUTOMÁTICAS SEGÚN TABLA DE ANTIGÜEDAD LFT
+                let diasQueCorresponden = 12; // Base año 1
+
+                if (antiguedadAniosExactos >= 1 && antiguedadAniosExactos < 2) diasQueCorresponden = 12;
+                else if (antiguedadAniosExactos >= 2 && antiguedadAniosExactos < 3) diasQueCorresponden = 14;
+                else if (antiguedadAniosExactos >= 3 && antiguedadAniosExactos < 4) diasQueCorresponden = 16;
+                else if (antiguedadAniosExactos >= 4 && antiguedadAniosExactos < 5) diasQueCorresponden = 18;
+                else if (antiguedadAniosExactos >= 5 && antiguedadAniosExactos < 11) diasQueCorresponden = 20;
+                else if (antiguedadAniosExactos >= 11 && antiguedadAniosExactos < 16) diasQueCorresponden = 22;
+                else if (antiguedadAniosExactos >= 16 && antiguedadAniosExactos < 21) diasQueCorresponden = 24;
+                else if (antiguedadAniosExactos >= 21) diasQueCorresponden = 26;
+
+                let factorVacaciones = diasQueCorresponden / 365;
                 let diasVacProporcionalesNoRedondeado = factorVacaciones * totalDiasTranscurridos; 
                 let diasVacProporcionales = Math.round(diasVacProporcionalesNoRedondeado); 
 
                 let montoVacacionesProp = diasVacProporcionales * salarioDiario; 
                 let montoVacacionesVencidas = diasVencidosInput * salarioDiario;
 
-                // CORRECCIÓN DE PRIMA VACACIONAL: estricto sobre días de vacaciones correspondientes (proporcionales) * SD * 0.25
-                let montoPrimaVacacional = diasVacProporcionales * salarioDiario * 0.25;
+                // CORRECCIÓN FIJA DINÁMICA DE PRIMA VACACIONAL: Días correspondientes según antigüedad × SD × 0.25 (Esquema libreta/pintarrón)
+                let montoPrimaVacacional = diasQueCorresponden * salarioDiario * 0.25;
 
-                // AJUSTE DE AGUINALDO: Factor dinámico basado en los días que el usuario indique
+                // 2. AGUINALDO PROPORCIONAL
                 let factorAguinaldoFijo = aguinaldoBaseInput / 365; 
                 let diasAguinaldoProp = factorAguinaldoFijo * totalDiasTranscurridos; 
                 let montoAguinaldo = diasAguinaldoProp * salarioDiario; 
@@ -349,9 +354,9 @@
                 let subtotalFiniquito = montoVacacionesProp + montoVacacionesVencidas + montoPrimaVacacional + montoAguinaldo;
                 let granTotalFinal = subtotalFiniquito;
 
-                // ASIGNAR FINIQUITO EN INTERFAZ
+                // ASIGNAR INTERFAZ
                 document.getElementById("valVacaciones").innerText = formatMoneda(montoVacacionesProp);
-                document.getElementById("procVacaciones").innerHTML = `<strong>Días reales:</strong> (12 ÷ 365) = 0.0328 × ${totalDiasTranscurridos} días naturales = ${diasVacProporcionalesNoRedondeado.toFixed(3)} días -> Redondeado a ${diasVacProporcionales} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacacionesProp.toFixed(2)}</div>`;
+                document.getElementById("procVacaciones").innerHTML = `<strong>Fórmula:</strong> (${diasQueCorresponden} ÷ 365) = ${factorVacaciones.toFixed(4)} × ${totalDiasTranscurridos} días = ${diasVacProporcionalesNoRedondeado.toFixed(3)} días -> Redondeado a ${diasVacProporcionales} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacacionesProp.toFixed(2)}</div>`;
 
                 if (diasVencidosInput > 0) {
                     document.getElementById("valVacacionesPendientes").innerText = formatMoneda(montoVacacionesVencidas);
@@ -361,16 +366,14 @@
                     document.getElementById("blockVacacionesPendientes").style.display = "none";
                 }
 
-                // Desglose visual corregido de la Prima
+                // Desglose visual de la Prima Vacacional corregida
                 document.getElementById("valPrimaVacacional").innerText = formatMoneda(montoPrimaVacacional);
-                document.getElementById("procPrimaVacacional").innerHTML = `<strong>Fórmula de Ley:</strong> ${diasVacProporcionales} días correspondientes × $${salarioDiario.toFixed(2)} (SD) × 25%<div>= $${montoPrimaVacacional.toFixed(2)}</div>`;
+                document.getElementById("procPrimaVacacional").innerHTML = `<strong>Fórmula del Pintarrón (D.C. × SD × .25):</strong> ${diasQueCorresponden} días correspondientes × $${salarioDiario.toFixed(2)} (SD) × 0.25<div>= $${montoPrimaVacacional.toFixed(2)}</div>`;
 
-                // Desglose visual corregido del Aguinaldo con sus días personalizados
+                // Desglose visual de Aguinaldo
                 document.getElementById("valAguinaldo").innerText = formatMoneda(montoAguinaldo);
-                document.getElementById("procAguinaldo").innerHTML = `<strong>Cálculo preciso (${aguinaldoBaseInput} días):</strong> (${aguinaldoBaseInput} ÷ 365) = ${factorAguinaldoFijo.toFixed(4)} × ${totalDiasTranscurridos} días reales = ${diasAguinaldoProp.toFixed(2)} días × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
+                document.getElementById("procAguinaldo").innerHTML = `<strong>Fórmula (${aguinaldoBaseInput} días):</strong> (${aguinaldoBaseInput} ÷ 365) = ${factorAguinaldoFijo.toFixed(4)} × ${totalDiasTranscurridos} días = ${diasAguinaldoProp.toFixed(2)} días × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
 
-
-                // 2. LÓGICA DINÁMICA DE LIQUIDACIÓN / DESPIDO
                 if (motivo === "despido") {
                     document.getElementById("badgeTipoConcepto").innerText = "Liquidación de Ley";
                     document.getElementById("labelGranTotal").innerText = "TOTAL LIQUIDACIÓN NETO ESTIMADO";
@@ -383,24 +386,23 @@
                     granTotalFinal += (montoTresMeses + montoVeinteDias + montoPrimaAntiguedad);
 
                     document.getElementById("valTresMeses").innerText = formatMoneda(montoTresMeses);
-                    document.getElementById("procTresMeses").innerHTML = `<strong>Art. 48 LFT:</strong> 90 días de salario diario ($${salarioDiario.toFixed(2)} × 90)<div>= $${montoTresMeses.toFixed(2)}</div>`;
+                    document.getElementById("procTresMeses").innerHTML = `<strong>Art. 48 LFT:</strong> 90 días × $${salarioDiario.toFixed(2)}<div>= $${montoTresMeses.toFixed(2)}</div>`;
 
                     document.getElementById("valVeinteDias").innerText = formatMoneda(montoVeinteDias);
-                    document.getElementById("procVeinteDias").innerHTML = `<strong>Art. 50 LFT:</strong> 20 días por cada año de servicios (${(antiguedadAniosExactos).toFixed(2)} años trabajados)<div>= $${montoVeinteDias.toFixed(2)}</div>`;
+                    document.getElementById("procVeinteDias").innerHTML = `<strong>Art. 50 LFT:</strong> 20 días por año × ${(antiguedadAniosExactos).toFixed(2)} años<div>= $${montoVeinteDias.toFixed(2)}</div>`;
 
                     document.getElementById("valPrimaAntiguedad").innerText = formatMoneda(montoPrimaAntiguedad);
-                    document.getElementById("procPrimaAntiguedad").innerHTML = `<strong>Art. 162 LFT:</strong> 12 días de salario por año laborado (${(antiguedadAniosExactos).toFixed(2)} años trabajados)<div>= $${montoPrimaAntiguedad.toFixed(2)}</div>`;
+                    document.getElementById("procPrimaAntiguedad").innerHTML = `<strong>Art. 162 LFT:</strong> 12 días por año × ${(antiguedadAniosExactos).toFixed(2)} años<div>= $${montoPrimaAntiguedad.toFixed(2)}</div>`;
 
-                    document.getElementById("legalText").innerText = "Al tratarse de un Despido Injustificado, el patrón está obligado a pagar el Finiquito base (Arts. 76, 80 y 87) más la Indemnización Constitucional de 3 meses de salario (Art. 48), los 20 días por año de servicios prestados (Art. 50) y la Prima de Antigüedad consistente en 12 días por cada año (Art. 162).";
+                    document.getElementById("legalText").innerText = "Al tratarse de un Despido Injustificado, corresponde Finiquito base (Arts. 76, 80 y 87) más la Indemnización Constitucional (Art. 48), 20 días por año (Art. 50) y Prima de Antigüedad (Art. 162).";
                 } else {
                     document.getElementById("badgeTipoConcepto").innerText = "Finiquito Estimado";
                     document.getElementById("labelGranTotal").innerText = "TOTAL FINIQUITO NETO ESTIMADO";
                     document.getElementById("bloqueLiquidacion").style.display = "none";
                     
-                    document.getElementById("legalText").innerText = "Por Renuncia Voluntaria, al trabajador le corresponde únicamente la parte proporcional de sus prestaciones devengadas (Finiquito): Vacaciones (Art. 76), Prima Vacacional mínima del 25% (Art. 80) y Aguinaldo Proporcional (Art. 87).";
+                    document.getElementById("legalText").innerText = "Por Renuncia Voluntaria, corresponde la parte proporcional de prestaciones devengadas: Vacaciones (Art. 76), Prima Vacacional mínima (Art. 80) y Aguinaldo Proporcional (Art. 87).";
                 }
 
-                // RESUMEN GENERAL
                 document.getElementById("outNombre").innerText = nombre;
                 document.getElementById("outAntiguedadText").innerText = `${anios} años, ${meses} meses, ${dias} días`;
                 document.getElementById("outDiasTotales").innerText = totalDiasTranscurridos;
@@ -411,6 +413,7 @@
                 resultsContent.style.display = "block";
             }
 
+            // Formateador de pesos mexicanos
             function formatMoneda(cant) {
                 return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(cant);
             }
