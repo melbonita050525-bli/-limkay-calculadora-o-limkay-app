@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Limkay | Calculadora de Finiquito Profesional</title>
+    <title>Limkay | Calculadora Avanzada de Finiquito y Liquidación</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -43,14 +43,14 @@
         .form-row .form-group { flex: 1; }
         label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
         label span { color: #94a3b8; font-weight: 400; }
-        input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--text-dark); outline: none; }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+        input, select { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; color: var(--text-dark); outline: none; background-color: #fff; }
+        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
         .input-icon-wrapper { position: relative; }
         .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 600; color: #64748b; }
         .input-icon-wrapper input { padding-left: 30px; }
         
         .error-message { color: var(--error); font-size: 12px; margin-top: 5px; display: none; font-weight: 500; }
-        input.invalid { border-color: var(--error); background-color: #fef2f2; }
+        input.invalid, select.invalid { border-color: var(--error); background-color: #fef2f2; }
         
         .action-buttons { margin-top: 30px; }
         .btn { width: 100%; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 10px; transition: all 0.2s; }
@@ -63,12 +63,14 @@
         .empty-state i { font-size: 50px; margin-bottom: 15px; }
         .card-header.highlight { display: flex; justify-content: space-between; align-items: center; }
         .badge { background: rgba(2, 132, 199, 0.1); color: var(--accent); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-alert { background: rgba(239, 68, 68, 0.1); color: var(--error); }
         
         .info-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 13px; border: 1px dashed var(--border); }
-        .breakdown-item { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .breakdown-section-title { font-size: 14px; font-weight: 700; color: var(--text-dark); margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); padding-bottom: 5px;}
+        .breakdown-item { margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
         .item-header { display: flex; justify-content: space-between; font-weight: 600; color: var(--text-dark); font-size: 14px; }
         .item-value { color: var(--accent); font-weight: 700; }
-        .item-procedure { margin-top: 8px; background: #fafafa; padding: 10px; border-left: 3px solid var(--accent); font-size: 12px; color: #4b5563; line-height: 1.6; }
+        .item-procedure { margin-top: 6px; background: #fafafa; padding: 10px; border-left: 3px solid var(--accent); font-size: 12px; color: #4b5563; line-height: 1.6; }
         .item-procedure div { font-family: monospace; font-size: 11px; margin-top: 4px; color: #0f172a; }
         
         .total-box-wrapper { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: 12px; padding: 25px; text-align: center; margin-top: 30px; box-shadow: var(--shadow-lg); }
@@ -96,19 +98,20 @@
     <div class="app-container">
         <header class="main-header">
             <div class="logo">Limkay<span>.</span></div>
-            <p class="subtitle"><i class="fa-solid fa-scale-balanced"></i> Calculadora de Finiquito Digital (México)</p>
+            <p class="subtitle"><i class="fa-solid fa-scale-balanced"></i> Sistema Avanzado de Cálculo Laboral</p>
         </header>
 
         <main class="content-grid">
+            <!-- FORMULARIO -->
             <section class="card calculator-card">
                 <div class="card-header">
-                    <h2><i class="fa-solid fa-calculator"></i> Datos del Trabajador</h2>
-                    <p>Introduce la información laboral obligatoria y opcional.</p>
+                    <h2><i class="fa-solid fa-calculator"></i> Datos del Vínculo Laboral</h2>
+                    <p>Introduce los datos con precisión para el desglose legal.</p>
                 </div>
                 
                 <form id="finiquitoForm" novalidate>
                     <div class="form-group">
-                        <label for="nombre"><i class="fa-solid fa-user"></i> Nombre completo</label>
+                        <label for="nombre"><i class="fa-solid fa-user"></i> Nombre completo del colaborador</label>
                         <input type="text" id="nombre" placeholder="Ej. Juan Pérez López" required>
                         <div class="error-message" id="error-nombre">Este campo es obligatorio.</div>
                     </div>
@@ -122,65 +125,87 @@
                         <div class="form-group">
                             <label for="fechaSalida"><i class="fa-solid fa-calendar-minus"></i> Fecha de Salida</label>
                             <input type="date" id="fechaSalida" required>
-                            <div class="error-message" id="error-fechaSalida">La fecha debe ser posterior al ingreso.</div>
+                            <div class="error-message" id="error-fechaSalida">Debe ser posterior al ingreso.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tipoPeriodo"><i class="fa-solid fa-clock"></i> Periodo de Pago</label>
+                            <select id="tipoPeriodo">
+                                <option value="mensual" selected>Mensual</option>
+                                <option value="quincenal">Quincenal</option>
+                                <option value="catorcenal">Catorcenal</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="motivoSalida"><i class="fa-solid fa-door-open"></i> Motivo de Término</label>
+                            <select id="motivoSalida">
+                                <option value="renuncia" selected>Renuncia Voluntaria (Finiquito)</option>
+                                <option value="despido">Despido Injustificado (Liquidación)</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="salarioMensual"><i class="fa-solid fa-money-bill-wave"></i> Salario mensual bruto (MXN)</label>
+                        <label id="labelSalario" for="salarioInput"><i class="fa-solid fa-money-bill-wave"></i> Salario Bruto Mensual (MXN)</label>
                         <div class="input-icon-wrapper">
                             <span class="input-icon">$</span>
-                            <input type="number" id="salarioMensual" placeholder="Ej. 18500" min="0.01" step="0.01" required>
+                            <input type="number" id="salarioInput" placeholder="Ej. 15000" min="0.01" step="0.01" required>
                         </div>
-                        <div class="error-message" id="error-salarioMensual">El salario debe ser mayor a cero.</div>
+                        <div class="error-message" id="error-salarioInput">El salario debe ser un monto mayor a cero.</div>
                     </div>
 
                     <div class="form-group">
                         <label for="vacacionesPendientes">
-                            <i class="fa-solid fa-umbrella-beach"></i> Vacaciones pendientes no gozadas <span>(Opcional)</span>
+                            <i class="fa-solid fa-umbrella-beach"></i> Días de vacaciones vencidas pendientes <span>(De años anteriores)</span>
                         </label>
-                        <input type="number" id="vacacionesPendientes" placeholder="Ej. 5" min="0" value="0">
-                        <div class="error-message" id="error-vacacionesPendientes">No se permiten días negativos.</div>
+                        <input type="number" id="vacacionesPendientes" placeholder="Ej. 0" min="0" value="0">
+                        <div class="error-message" id="error-vacacionesPendientes">No se permiten números negativos.</div>
                     </div>
 
                     <div class="action-buttons">
                         <button type="button" id="btnCalcular" class="btn btn-primary">
-                            <i class="fa-solid fa-gears"></i> Calcular Finiquito
+                            <i class="fa-solid fa-gears"></i> Ejecutar Cálculo Legal
                         </button>
                         <button type="button" id="btnLimpiar" class="btn btn-secondary">
-                            <i class="fa-solid fa-broom"></i> Limpiar
+                            <i class="fa-solid fa-broom"></i> Resetear
                         </button>
                         <button type="button" id="btnImprimir" class="btn btn-accent" disabled>
-                            <i class="fa-solid fa-print"></i> Imprimir Reporte
+                            <i class="fa-solid fa-print"></i> Generar Impresión
                         </button>
                     </div>
                 </form>
             </section>
 
+            <!-- RESULTADOS -->
             <section class="card results-card" id="resultsCard">
                 <div class="empty-state" id="emptyState">
-                    <i class="fa-solid fa-chart-pie"></i>
-                    <h3>Listo para calcular</h3>
-                    <p>Completa el formulario de la izquierda y haz clic en calcular para ver el desglose legal detallado.</p>
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <h3>Esperando Ejecución</h3>
+                    <p>Rellena los datos laborales de la izquierda para desplegar el desglose e indemnizaciones según el artículo correspondiente.</p>
                 </div>
 
                 <div class="results-content" id="resultsContent" style="display: none;">
                     <div class="card-header highlight">
-                        <h2><i class="fa-solid fa-file-invoice-dollar"></i> Reporte de Liquidación</h2>
-                        <span class="badge" id="badgeAntiguedad">-</span>
+                        <h2><i class="fa-solid fa-file-invoice-dollar"></i> Desglose de Prestaciones</h2>
+                        <span class="badge" id="badgeTipoConcepto">-</span>
                     </div>
 
                     <div class="info-summary-grid">
-                        <div class="summary-item"><strong>Empleado:</strong> <span id="outNombre">-</span></div>
-                        <div class="summary-item"><strong>Antigüedad Real:</strong> <span id="outAntiguedadText">-</span></div>
-                        <div class="summary-item"><strong>Días del periodo:</strong> <span id="outDiasTrabajados">-</span> días</div>
-                        <div class="summary-item"><strong>Salario Diario:</strong> <span id="outSalarioDiario">-</span></div>
+                        <div class="summary-item"><strong>Trabajador:</strong> <span id="outNombre">-</span></div>
+                        <div class="summary-item"><strong>Antigüedad Completa:</strong> <span id="outAntiguedadText">-</span></div>
+                        <div class="summary-item"><strong>Días Totales:</strong> <span id="outDiasTotales">-</span> días</div>
+                        <div class="summary-item"><strong>Salario Diario (SD):</strong> <span id="outSD">-</span></div>
+                        <div class="summary-item"><strong>Salario Diario Integrado (SDI):</strong> <span id="outSDI">-</span></div>
                     </div>
 
+                    <!-- SECCIÓN FINIQUITO DE LEY -->
+                    <div class="breakdown-section-title">Prestaciones Devengadas (Finiquito)</div>
                     <div class="breakdown-list">
                         <div class="breakdown-item">
                             <div class="item-header">
-                                <span><i class="fa-solid fa-plane"></i> Vacaciones Proporcionales</span>
+                                <span><i class="fa-solid fa-plane"></i> Vacaciones Proporcionales del Año</span>
                                 <span class="item-value" id="valVacaciones">$0.00</span>
                             </div>
                             <div class="item-procedure" id="procVacaciones"></div>
@@ -188,7 +213,7 @@
 
                         <div class="breakdown-item" id="blockVacacionesPendientes" style="display:none;">
                             <div class="item-header">
-                                <span><i class="fa-solid fa-calendar-check"></i> Vacaciones Pendientes Adicionales</span>
+                                <span><i class="fa-solid fa-calendar-check"></i> Vacaciones Pendientes de Años Anteriores</span>
                                 <span class="item-value" id="valVacacionesPendientes">$0.00</span>
                             </div>
                             <div class="item-procedure" id="procVacacionesPendientes"></div>
@@ -196,7 +221,7 @@
 
                         <div class="breakdown-item">
                             <div class="item-header">
-                                <span><i class="fa-solid fa-star"></i> Prima Vacacional Legal</span>
+                                <span><i class="fa-solid fa-star"></i> Prima Vacacional (25%)</span>
                                 <span class="item-value" id="valPrimaVacacional">$0.00</span>
                             </div>
                             <div class="item-procedure" id="procPrimaVacacional"></div>
@@ -211,10 +236,38 @@
                         </div>
                     </div>
 
+                    <!-- SECCIÓN INDEMNIZACIONES POR DESPIDO -->
+                    <div id="seccionLiquidacion" style="display: none;">
+                        <div class="breakdown-section-title" style="color: var(--error);">Indemnizaciones de Ley (Art. 48 / 50 LFT)</div>
+                        <div class="breakdown-list">
+                            <div class="breakdown-item">
+                                <div class="item-header">
+                                    <span><i class="fa-solid fa-gavel"></i> Indemnización Constitucional (3 Meses)</span>
+                                    <span class="item-value" id="valIndemConstitucional">$0.00</span>
+                                </div>
+                                <div class="item-procedure" id="procIndemConstitucional"></div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="item-header">
+                                    <span><i class="fa-solid fa-calendar-days"></i> Indemnización de 20 Días por Año</span>
+                                    <span class="item-value" id="valIndem20Dias">$0.00</span>
+                                </div>
+                                <div class="item-procedure" id="procIndem20Dias"></div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="item-header">
+                                    <span><i class="fa-solid fa-award"></i> Prima de Antigüedad (12 Días por Año)</span>
+                                    <span class="item-value" id="valPrimaAntiguedad">$0.00</span>
+                                </div>
+                                <div class="item-procedure" id="procPrimaAntiguedad"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="total-box-wrapper">
-                        <div class="total-label">TOTAL DEL FINIQUITO ESTIMADO</div>
+                        <div class="total-label" id="labelTotal">TOTAL NETO ESTIMADO</div>
                         <div class="total-amount" id="valTotalFiniquito">$0.00 MXN</div>
-                        <p class="legal-notice">*Este documento es una estimación informativa basada en la Ley Federal del Trabajo vigente.</p>
+                        <p class="legal-notice">*Cálculo informativo bajo el marco de la Ley Federal del Trabajo en México.</p>
                     </div>
                 </div>
             </section>
@@ -223,15 +276,26 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            const tipoPeriodo = document.getElementById("tipoPeriodo");
+            const labelSalario = document.getElementById("labelSalario");
             const btnCalcular = document.getElementById("btnCalcular");
             const btnLimpiar = document.getElementById("btnLimpiar");
             const btnImprimir = document.getElementById("btnImprimir");
             const form = document.getElementById("finiquitoForm");
             const emptyState = document.getElementById("emptyState");
             const resultsContent = document.getElementById("resultsContent");
+            const seccionLiquidacion = document.getElementById("seccionLiquidacion");
+
+            // Cambiar etiqueta dinámica de salario según periodo seleccionado
+            tipoPeriodo.addEventListener("change", () => {
+                const p = tipoPeriodo.value;
+                if(p === "mensual") labelSalario.innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Salario Bruto Mensual (MXN)`;
+                if(p === "quincenal") labelSalario.innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Salario Bruto Quincenal (MXN)`;
+                if(p === "catorcenal") labelSalario.innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Salario Bruto Catorcenal (MXN)`;
+            });
 
             btnCalcular.addEventListener("click", () => {
-                if (validarFormulario()) calcularFiniquito();
+                if (validarFormulario()) calcularTodo();
             });
             btnLimpiar.addEventListener("click", limpiarFormulario);
             btnImprimir.addEventListener("click", () => window.print());
@@ -241,21 +305,21 @@
                 const nombre = document.getElementById("nombre");
                 const fIngreso = document.getElementById("fechaIngreso");
                 const fSalida = document.getElementById("fechaSalida");
-                const salario = document.getElementById("salarioMensual");
+                const salario = document.getElementById("salarioInput");
                 const vacPendientes = document.getElementById("vacacionesPendientes");
 
                 document.querySelectorAll(".error-message").forEach(e => e.style.display = "none");
-                document.querySelectorAll("input").forEach(i => i.classList.remove("invalid"));
+                document.querySelectorAll("input, select").forEach(i => i.classList.remove("invalid"));
 
                 if (!nombre.value.trim()) { mostrarError("nombre"); esValido = false; }
                 if (!fIngreso.value) { mostrarError("fechaIngreso"); esValido = false; }
                 if (!fSalida.value) { mostrarError("fechaSalida"); esValido = false; }
                 
                 if (fIngreso.value && fSalida.value && new Date(fSalida.value) <= new Date(fIngreso.value)) {
-                    mostrarError("fechaSalida", "La fecha de salida debe ser posterior a la de ingreso.");
+                    mostrarError("fechaSalida", "La fecha de término debe ser posterior a la de alta inicial.");
                     esValido = false;
                 }
-                if (!salario.value || parseFloat(salario.value) <= 0) { mostrarError("salarioMensual"); esValido = false; }
+                if (!salario.value || parseFloat(salario.value) <= 0) { mostrarError("salarioInput"); esValido = false; }
                 if (vacPendientes.value && parseInt(vacPendientes.value) < 0) { mostrarError("vacacionesPendientes"); esValido = false; }
 
                 return esValido;
@@ -268,103 +332,152 @@
                 err.style.display = "block";
             }
 
-            function calcularFiniquito() {
+            function calcularTodo() {
                 const nombre = document.getElementById("nombre").value.trim();
                 const fIngreso = new Date(document.getElementById("fechaIngreso").value + "T00:00:00");
                 const fSalida = new Date(document.getElementById("fechaSalida").value + "T00:00:00");
-                const salarioMensual = parseFloat(document.getElementById("salarioMensual").value);
-                const diasPendientes = parseInt(document.getElementById("vacacionesPendientes").value) || 0;
+                const montoInput = parseFloat(document.getElementById("salarioInput").value);
+                const periodo = tipoPeriodo.value;
+                const motivo = document.getElementById("motivoSalida").value;
+                const diasVencidos = parseInt(document.getElementById("vacacionesPendientes").value) || 0;
 
+                // 1. OBTENER SALARIO DIARIO EXACTO (SD)
+                let salarioDiario = 0;
+                if (periodo === "mensual") salarioDiario = montoInput / 30;
+                else if (periodo === "quincenal") salarioDiario = montoInput / 15;
+                else if (periodo === "catorcenal") salarioDiario = montoInput / 14;
+
+                // 2. CÁLCULO ESTRICTO DE TIEMPO (Antigüedad)
                 const msPorDia = 24 * 60 * 60 * 1000;
-                const totalDiasTrabajados = Math.round((fSalida - fIngreso) / msPorDia) + 1;
+                const totalDiasTranscurridos = Math.round((fSalida - fIngreso) / msPorDia) + 1;
 
                 let anios = fSalida.getFullYear() - fIngreso.getFullYear();
                 let meses = fSalida.getMonth() - fIngreso.getMonth();
                 let dias = fSalida.getDate() - fIngreso.getDate() + 1;
 
-                if (dias < 0) { meses--; const cp = new Date(fSalida.getFullYear(), fSalida.getMonth(), 0); dias += cp.getDate(); }
-                if (meses < 0) { anios--; meses += 12; }
-
-                const salarioDiario = salarioMensual / 30;
-
-                let tabVac = 12;
-                if (anios === 1) tabVac = 14;
-                else if (anios === 2) tabVac = 16;
-                else if (anios === 3) tabVac = 18;
-                else if (anios === 4) tabVac = 20;
-                else if (anios >= 5 && anios <= 9) tabVac = 22;
-                else if (anios >= 10) tabVac = 24;
-
-                let ultAniv = new Date(fSalida.getFullYear(), fIngreso.getMonth(), fIngreso.getDate());
-                if (ultAniv > fSalida) ultAniv.setFullYear(ultAniv.getFullYear() - 1);
-                const diasAnioCorriente = Math.round((fSalida - ultAniv) / msPorDia) + 1;
-
-                let montoVacaciones = 0, diasVacProp = 0, htmlVac = "";
-                if (totalDiasTrabajados < 365) {
-                    diasVacProp = (12 / 365) * totalDiasTrabajados;
-                    montoVacaciones = diasVacProp * salarioDiario;
-                    htmlVac = `<strong>Fórmula (&lt; 1 año):</strong> (12 ÷ 365) × ${totalDiasTrabajados} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacaciones.toFixed(2)}</div>`;
-                } else {
-                    diasVacProp = (tabVac / 365) * diasAnioCorriente;
-                    montoVacaciones = diasVacProp * salarioDiario;
-                    htmlVac = `<strong>Fórmula:</strong> (${tabVac} ÷ 365) × ${diasAnioCorriente} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacaciones.toFixed(2)}</div>`;
+                if (dias < 0) { 
+                    meses--; 
+                    const ultimoDiaMesAnterior = new Date(fSalida.getFullYear(), fSalida.getMonth(), 0).getDate();
+                    dias += ultimoDiaMesAnterior; 
+                }
+                if (meses < 0) { 
+                    anios--; 
+                    meses += 12; 
                 }
 
-                let montoVacPend = 0;
-                if (diasPendientes > 0) {
-                    montoVacPend = diasPendientes * salarioDiario;
-                    document.getElementById("procVacacionesPendientes").innerHTML = `<strong>Fórmula:</strong> ${diasPendientes} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacPend.toFixed(2)}</div>`;
-                    document.getElementById("valVacacionesPendientes").innerText = formatMoneda(montoVacPend);
+                // Fracción de año completo para cálculos proporcionales matemáticos
+                const factorAntiguedadExacta = totalDiasTranscurridos / 365;
+
+                // 3. TABLA DE VACACIONES LFT VIGENTE
+                let diasVacacionesDerecho = 12;
+                if (anios === 1) diasVacacionesDerecho = 14;
+                else if (anios === 2) diasVacacionesDerecho = 16;
+                else if (anios === 3) diasVacacionesDerecho = 18;
+                else if (anios === 4) diasVacacionesDerecho = 20;
+                else if (anios >= 5 && anios <= 9) diasVacacionesDerecho = 22;
+                else if (anios >= 10 && anios <= 14) diasVacacionesDerecho = 24;
+                else if (anios >= 15 && anios <= 19) diasVacacionesDerecho = 26;
+                else if (anios >= 20) diasVacacionesDerecho = 28;
+
+                // 4. DIAS TRABAJADOS EN EL ÚLTIMO AÑO CORRIENTE (Para Vacaciones Proporcionales)
+                let ultimoAniversario = new Date(fIngreso.getTime());
+                ultimoAniversario.setFullYear(fSalida.getFullYear());
+                if (ultimoAniversario > fSalida) {
+                    ultimoAniversario.setFullYear(ultimoAniversario.getFullYear() - 1);
+                }
+                const diasAñoCorriente = Math.round((fSalida - ultimoAniversario) / msPorDia) + 1;
+
+                // 5. CALCULO DE PRESTACIONES DEVENGADAS
+                // Vacaciones Proporcionales
+                let diasVacProporcionales = (diasVacacionesDerecho / 365) * diasAñoCorriente;
+                let montoVacacionesProp = diasVacProporcionales * salarioDiario;
+
+                // Vacaciones Vencidas
+                let montoVacacionesVencidas = diasVencidos * salarioDiario;
+
+                // Prima Vacacional (25%)
+                let montoPrimaVacacional = (montoVacacionesProp + montoVacacionesVencidas) * 0.25;
+
+                // Aguinaldo Proporcional (Días transcurridos en el año civil actual)
+                const inicioAñoCivil = new Date(fSalida.getFullYear(), 0, 1);
+                const fechaBaseAguinaldo = fIngreso > inicioAñoCivil ? fIngreso : inicioAñoCivil;
+                const diasAñoAguinaldo = Math.round((fSalida - fechaBaseAguinaldo) / msPorDia) + 1;
+                
+                let diasAguinaldoProp = (15 / 365) * diasAñoAguinaldo;
+                let montoAguinaldo = diasAguinaldoProp * salarioDiario;
+
+                // SUB-TOTAL FINIQUITO DE LEY
+                let subtotalFiniquito = montoVacacionesProp + montoVacacionesVencidas + montoPrimaVacacional + montoAguinaldo;
+
+                // 6. CÁLCULO DE SALARIO DIARIO INTEGRADO (SDI) PARA LIQUIDACIÓN
+                // Integración básica ordinaria: Aguinaldo (15 días) + Prima Vacacional (25% de los días de vac. del año actual)
+                let factorIntegracion = 1 + (15 / 365) + ((diasVacacionesDerecho * 0.25) / 365);
+                let SDI = salarioDiario * factorIntegracion;
+
+                // 7. SI ES DESPIDO: CALCULAR CONCEPTOS DE INDEMNIZACIÓN
+                let montoIndemConstitucional = 0;
+                let montoIndem20Dias = 0;
+                let montoPrimaAntiguedad = 0;
+
+                if (motivo === "despido") {
+                    seccionLiquidacion.style.display = "block";
+                    document.getElementById("badgeTipoConcepto").innerText = "Liquidación por Despido";
+                    document.getElementById("badgeTipoConcepto").className = "badge badge-alert";
+                    document.getElementById("labelTotal").innerText = "TOTAL LIQUIDACIÓN NETA ESTIMADA";
+
+                    // Indemnización 3 meses (90 días fijos de SDI)
+                    montoIndemConstitucional = 90 * SDI;
+
+                    // 20 días de salario por cada año de servicios prestados (proporcional continuo)
+                    montoIndem20Dias = 20 * SDI * factorAntiguedadExacta;
+
+                    // Prima de Antigüedad: 12 días por año (Se topa a un máx de 2 salarios mínimos, usaremos simulación base SDI directo para aproximación)
+                    montoPrimaAntiguedad = 12 * SDI * factorAntiguedadExacta;
+
+                    // Renderizar procesos de liquidación
+                    document.getElementById("procIndemConstitucional").innerHTML = `<strong>Art. 48 LFT:</strong> 90 días × $${SDI.toFixed(2)} (SDI)<div>= $${montoIndemConstitucional.toFixed(2)}</div>`;
+                    document.getElementById("procIndem20Dias").innerHTML = `<strong>Art. 50 LFT:</strong> 20 días × $${SDI.toFixed(2)} (SDI) × ${factorAntiguedadExacta.toFixed(4)} años de antigüedad flotante<div>= $${montoIndem20Dias.toFixed(2)}</div>`;
+                    document.getElementById("procPrimaAntiguedad").innerHTML = `<strong>Art. 162 LFT:</strong> 12 días × $${SDI.toFixed(2)} (SDI) × ${factorAntiguedadExacta.toFixed(4)} años cumplidos/proporcionales<div>= $${montoPrimaAntiguedad.toFixed(2)}</div>`;
+                } else {
+                    seccionLiquidacion.style.display = "none";
+                    document.getElementById("badgeTipoConcepto").innerText = "Finiquito por Renuncia";
+                    document.getElementById("badgeTipoConcepto").className = "badge";
+                    document.getElementById("labelTotal").innerText = "TOTAL FINIQUITO NETO ESTIMADO";
+                }
+
+                // TOTAL ACUMULADO
+                let granTotalFinal = subtotalFiniquito + montoIndemConstitucional + montoIndem20Dias + montoPrimaAntiguedad;
+
+                // 8. DESPLEGAR DATOS E INTERFAZ
+                document.getElementById("outNombre").innerText = nombre;
+                document.getElementById("outAntiguedadText").innerText = `${anios} años, ${meses} meses, ${dias} días`;
+                document.getElementById("outDiasTotales").innerText = totalDiasTranscurridos;
+                document.getElementById("outSD").innerText = formatMoneda(salarioDiario);
+                document.getElementById("outSDI").innerText = formatMoneda(SDI);
+
+                // Inyecciones en renglones ordinarios
+                document.getElementById("valVacaciones").innerText = formatMoneda(montoVacacionesProp);
+                document.getElementById("procVacaciones").innerHTML = `<strong>Proporcional año actual:</strong> (${diasVacacionesDerecho} días de ley ÷ 365) × ${diasAñoCorriente} días laborados en el periodo × $${salarioDiario.toFixed(2)} (SD)<div>= $${montoVacacionesProp.toFixed(2)}</div>`;
+
+                if (diasVencidos > 0) {
+                    document.getElementById("valVacacionesPendientes").innerText = formatMoneda(montoVacacionesVencidas);
+                    document.getElementById("procVacacionesPendientes").innerHTML = `<strong>Días acumulados acumulados no tomados:</strong> ${diasVencidos} días × $${salarioDiario.toFixed(2)} (SD)<div>= $${montoVacacionesVencidas.toFixed(2)}</div>`;
                     document.getElementById("blockVacacionesPendientes").style.display = "block";
                 } else {
                     document.getElementById("blockVacacionesPendientes").style.display = "none";
                 }
 
-                let montoPrima = 0, htmlPrima = "";
-                if (totalDiasTrabajados < 365) {
-                    montoPrima = salarioDiario * 12 * 0.25;
-                    htmlPrima = `<strong>REGLA ESPECIAL (&lt; 1 año):</strong> $${salarioDiario.toFixed(2)} (Salario) × 12 días fijos × 0.25<div>= $${montoPrima.toFixed(2)}</div>`;
-                } else {
-                    montoPrima = diasVacProp * salarioDiario * 0.25;
-                    htmlPrima = `<strong>Fórmula:</strong> $${salarioDiario.toFixed(2)} × ${diasVacProp.toFixed(4)} días × 0.25<div>= $${montoPrima.toFixed(2)}</div>`;
-                }
+                document.getElementById("valPrimaVacacional").innerText = formatMoneda(montoPrimaVacacional);
+                document.getElementById("procPrimaVacacional").innerHTML = `<strong>Porcentaje legal:</strong> 25% sobre total de vacaciones ($${(montoVacacionesProp + montoVacacionesVencidas).toFixed(2)})<div>= $${montoPrimaVacacional.toFixed(2)}</div>`;
 
-                if (diasPendientes > 0) {
-                    let pPend = montoVacPend * 0.25;
-                    montoPrima += pPend;
-                    htmlPrima += `<br><strong>Más Prima Pendientes:</strong> $${montoVacPend.toFixed(2)} × 0.25 = +$${pPend.toFixed(2)}`;
-                }
-
-                let montoAguinaldo = 0, htmlAgui = "";
-                const incAgui = new Date(fSalida.getFullYear(), 0, 1);
-                const baseAgui = fIngreso > incAgui ? fIngreso : incAgui;
-                const diasAgui = Math.round((fSalida - baseAgui) / msPorDia) + 1;
-
-                if (totalDiasTrabajados >= 365 && diasAgui >= 365) {
-                    montoAguinaldo = salarioDiario * 15;
-                    htmlAgui = `<strong>Fórmula:</strong> $${salarioDiario.toFixed(2)} × 15 días<div>= $${montoAguinaldo.toFixed(2)}</div>`;
-                } else {
-                    montoAguinaldo = ((15 / 365) * diasAgui) * salarioDiario;
-                    htmlAgui = `<strong>Fórmula Proporcional:</strong> ((15 ÷ 365) × ${diasAgui} días) × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
-                }
-
-                const total = montoVacaciones + montoVacPend + montoPrima + montoAguinaldo;
-
-                document.getElementById("outNombre").innerText = nombre;
-                document.getElementById("outAntiguedadText").innerText = `${anios} años, ${meses} meses, ${dias} días`;
-                document.getElementById("outDiasTrabajados").innerText = totalDiasTrabajados;
-                document.getElementById("outSalarioDiario").innerText = formatMoneda(salarioDiario);
-                
-                document.getElementById("valVacaciones").innerText = formatMoneda(montoVacaciones);
-                document.getElementById("valPrimaVacacional").innerText = formatMoneda(montoPrima);
                 document.getElementById("valAguinaldo").innerText = formatMoneda(montoAguinaldo);
-                document.getElementById("valTotalFiniquito").innerText = `${formatMoneda(total)} MXN`;
+                document.getElementById("procAguinaldo").innerHTML = `<strong>Aguinaldo Proporcional:</strong> (15 días de ley ÷ 365) × ${diasAñoAguinaldo} días del año corriente transcurridos × $${salarioDiario.toFixed(2)} (SD)<div>= $${montoAguinaldo.toFixed(2)}</div>`;
 
-                document.getElementById("procVacaciones").innerHTML = htmlVac;
-                document.getElementById("procPrimaVacacional").innerHTML = htmlPrima;
-                document.getElementById("procAguinaldo").innerHTML = htmlAgui;
-
-                document.getElementById("badgeAntiguedad").innerText = totalDiasTrabajados < 365 ? "Menor a 1 año" : `Antigüedad: +${anios} año(s)`;
+                // Renderizar montos finales
+                document.getElementById("valIndemConstitucional").innerText = formatMoneda(montoIndemConstitucional);
+                document.getElementById("valIndem20Dias").innerText = formatMoneda(montoIndem20Dias);
+                document.getElementById("valPrimaAntiguedad").innerText = formatMoneda(montoPrimaAntiguedad);
+                document.getElementById("valTotalFiniquito").innerText = `${formatMoneda(granTotalFinal)} MXN`;
 
                 emptyState.style.display = "none";
                 resultsContent.style.display = "block";
@@ -378,10 +491,12 @@
             function limpiarFormulario() {
                 form.reset();
                 document.querySelectorAll(".error-message").forEach(e => e.style.display = "none");
-                document.querySelectorAll("input").forEach(i => i.classList.remove("invalid"));
+                document.querySelectorAll("input, select").forEach(i => i.classList.remove("invalid"));
                 emptyState.style.display = "block";
                 resultsContent.style.display = "none";
+                seccionLiquidacion.style.display = "none";
                 btnImprimir.disabled = true;
+                labelSalario.innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Salario Bruto Mensual (MXN)`;
             }
         });
     </script>
