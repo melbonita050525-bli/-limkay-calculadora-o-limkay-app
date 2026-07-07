@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Limkay | Calculadora Avanzada de Finiquito Académica</title>
+    <title>Limkay | Calculadora Avanzada de Finiquito (Días Reales)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -49,15 +49,10 @@
         .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 600; color: #64748b; }
         .input-icon-wrapper input { padding-left: 30px; }
         
-        .error-message { color: var(--error); font-size: 12px; margin-top: 5px; display: none; font-weight: 500; }
-        input.invalid, select.invalid { border-color: var(--error); background-color: #fef2f2; }
-        
         .action-buttons { margin-top: 30px; }
         .btn { width: 100%; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; margin-bottom: 10px; transition: all 0.2s; }
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-secondary { background-color: #f1f5f9; color: #475569; }
-        .btn-accent { background-color: var(--accent); color: white; }
-        .btn:disabled { background-color: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
         
         .empty-state { text-align: center; padding: 80px 20px; color: #94a3b8; }
         .empty-state i { font-size: 50px; margin-bottom: 15px; }
@@ -75,7 +70,6 @@
         .total-box-wrapper { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: 12px; padding: 25px; text-align: center; margin-top: 30px; box-shadow: var(--shadow-lg); }
         .total-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; opacity: 0.8; }
         .total-amount { font-size: 32px; font-weight: 800; margin: 8px 0; color: #38bdf8; }
-        .legal-notice { font-size: 11px; opacity: 0.6; }
 
         @media (max-width: 850px) {
             .content-grid { flex-direction: column; }
@@ -89,7 +83,7 @@
     <div class="app-container">
         <header class="main-header">
             <div class="logo">Limkay<span>.</span></div>
-            <p class="subtitle"><i class="fa-solid fa-scale-balanced"></i> Sistema de Cálculo Laboral (Ajuste Manual)</p>
+            <p class="subtitle"><i class="fa-solid fa-scale-balanced"></i> Sistema de Cálculo Laboral (Días de Calendario Reales)</p>
         </header>
 
         <main class="content-grid">
@@ -97,7 +91,7 @@
             <section class="card calculator-card">
                 <div class="card-header">
                     <h2><i class="fa-solid fa-calculator"></i> Datos del Vínculo Laboral</h2>
-                    <p>Introduce los datos para calcular según el esquema de tu libreta.</p>
+                    <p>Introduce los datos para calcular con días reales de calendario y redondeos manuales.</p>
                 </div>
                 
                 <form id="finiquitoForm" novalidate>
@@ -166,7 +160,7 @@
                 <div class="empty-state" id="emptyState">
                     <i class="fa-solid fa-scale-balanced"></i>
                     <h3>Esperando Ejecución</h3>
-                    <p>Rellena los datos para ver los resultados exactos basados en tus fórmulas manuales.</p>
+                    <p>Rellena los datos para ver los resultados exactos basados en días calendario reales.</p>
                 </div>
 
                 <div class="results-content" id="resultsContent" style="display: none;">
@@ -177,8 +171,8 @@
 
                     <div class="info-summary-grid">
                         <div class="summary-item"><strong>Trabajador:</strong> <span id="outNombre">-</span></div>
-                        <div class="summary-item"><strong>Antigüedad Comercial:</strong> <span id="outAntiguedadText">-</span></div>
-                        <div class="summary-item"><strong>Días Totales (30 por mes):</strong> <span id="outDiasTotales">-</span> días</div>
+                        <div class="summary-item"><strong>Antigüedad Real:</strong> <span id="outAntiguedadText">-</span></div>
+                        <div class="summary-item"><strong>Días Totales (Calendario Natural):</strong> <span id="outDiasTotales">-</span> días</div>
                         <div class="summary-item"><strong>Salario Diario (SD):</strong> <span id="outSD">-</span></div>
                     </div>
 
@@ -254,48 +248,48 @@
                 const periodo = tipoPeriodo.value;
                 const diasVencidosInput = parseInt(document.getElementById("vacacionesPendientes").value) || 0;
 
-                // 1. SALARIO DIARIO EXACTO DE TU LIBRETA (5000 / 30 = 166.6666...)
                 let salarioDiario = 0;
                 if (periodo === "mensual") salarioDiario = montoInput / 30;
                 else if (periodo === "quincenal") salarioDiario = montoInput / 15;
                 else if (periodo === "catorcenal") salarioDiario = montoInput / 14;
 
-                // 2. CONTAR MESES COMPLETOS COMERCIALES (Cada mes = 30 días exactos)
-                let mesesDiferencia = (fSalida.getFullYear() - fIngreso.getFullYear()) * 12 + (fSalida.getMonth() - fIngreso.getMonth());
-                if (fSalida.getDate() < fIngreso.getDate()) {
-                    mesesDiferencia--;
-                }
-                
-                // Para tu ejemplo da 7 meses exactos -> 7 * 30 = 210 días comerciales
-                const totalDiasTranscurridos = mesesDiferencia * 30; 
+                // CAMBIO CLAVE: CÓMPUTO REAL DE DÍAS TRANSCURRIDOS EN CALENDARIO NATURAL
+                const msPorDia = 24 * 60 * 60 * 1000;
+                const totalDiasTranscurridos = Math.round((fSalida - fIngreso) / msPorDia) + 1;
 
-                // 3. VACACIONES PROPORCIONALES (Fórmulas de tu libreta)
+                // Mostrar desglose de meses/días estéticos
+                let anios = fSalida.getFullYear() - fIngreso.getFullYear();
+                let meses = fSalida.getMonth() - fIngreso.getMonth();
+                let dias = fSalida.getDate() - fIngreso.getDate() + 1;
+                if (dias < 0) { meses--; const ult = new Date(fSalida.getFullYear(), fSalida.getMonth(), 0).getDate(); dias += ult; }
+                if (meses < 0) { anios--; meses += 12; }
+
+                // VACACIONES PROPORCIONALES (Calculadas con los días naturales reales)
                 let factorVacaciones = 12 / 365; // 0.0328
-                let diasVacProporcionalesNoRedondeado = factorVacaciones * totalDiasTranscurridos; // 6.888
-                let diasVacProporcionales = Math.round(diasVacProporcionalesNoRedondeado); // Redondeado a 7 días exactos como en tu libreta
+                let diasVacProporcionalesNoRedondeado = factorVacaciones * totalDiasTranscurridos; 
+                let diasVacProporcionales = Math.round(diasVacProporcionalesNoRedondeado); // Redondeo manual al entero
 
-                let montoVacacionesProp = diasVacProporcionales * salarioDiario; // 7 * 166.66 = 1166.62
+                let montoVacacionesProp = diasVacProporcionales * salarioDiario; 
                 let montoVacacionesVencidas = diasVencidosInput * salarioDiario;
 
-                // 4. PRIMA VACACIONAL (25% sobre tus vacaciones de la libreta)
+                // PRIMA VACACIONAL
                 let montoPrimaVacacional = (montoVacacionesProp + montoVacacionesVencidas) * 0.25;
 
-                // 5. AGUINALDO PROPORCIONAL (Factor fijo 0.041 como en tu libreta)
+                // AGUINALDO PROPORCIONAL (Usa tu factor fijo de libreta 0.041, pero sobre los días naturales reales)
                 let factorAguinaldoFijo = 0.041; 
-                let diasAguinaldoProp = factorAguinaldoFijo * totalDiasTranscurridos; // 0.041 * 210 = 8.61 días
-                let montoAguinaldo = diasAguinaldoProp * salarioDiario; // 8.61 * 166.66 = 1434.94
+                let diasAguinaldoProp = factorAguinaldoFijo * totalDiasTranscurridos; 
+                let montoAguinaldo = diasAguinaldoProp * salarioDiario; 
 
-                // TOTAL FINAL DE TU LIBRETA
                 let granTotalFinal = montoVacacionesProp + montoVacacionesVencidas + montoPrimaVacacional + montoAguinaldo;
 
                 // DESPLEGAR EN INTERFAZ
                 document.getElementById("outNombre").innerText = nombre;
-                document.getElementById("outAntiguedadText").innerText = `0 años, ${mesesDiferencia} meses, 0 días`;
+                document.getElementById("outAntiguedadText").innerText = `${anios} años, ${meses} meses, ${dias} días`;
                 document.getElementById("outDiasTotales").innerText = totalDiasTranscurridos;
                 document.getElementById("outSD").innerText = formatMoneda(salarioDiario);
 
                 document.getElementById("valVacaciones").innerText = formatMoneda(montoVacacionesProp);
-                document.getElementById("procVacaciones").innerHTML = `<strong>Fórmula manual:</strong> (12 ÷ 365) = 0.0328 × ${totalDiasTranscurridos} días = ${diasVacProporcionalesNoRedondeado.toFixed(3)} días -> Redondeado a ${diasVacProporcionales} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacacionesProp.toFixed(2)}</div>`;
+                document.getElementById("procVacaciones").innerHTML = `<strong>Días reales:</strong> (12 ÷ 365) = 0.0328 × ${totalDiasTranscurridos} días naturales = ${diasVacProporcionalesNoRedondeado.toFixed(3)} días -> Redondeado a ${diasVacProporcionales} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacacionesProp.toFixed(2)}</div>`;
 
                 if (diasVencidosInput > 0) {
                     document.getElementById("valVacacionesPendientes").innerText = formatMoneda(montoVacacionesVencidas);
@@ -309,7 +303,7 @@
                 document.getElementById("procPrimaVacacional").innerHTML = `<strong>25% de Prima:</strong> 25% sobre total de vacaciones ($${(montoVacacionesProp + montoVacacionesVencidas).toFixed(2)})<div>= $${montoPrimaVacacional.toFixed(2)}</div>`;
 
                 document.getElementById("valAguinaldo").innerText = formatMoneda(montoAguinaldo);
-                document.getElementById("procAguinaldo").innerHTML = `<strong>Fórmula manual:</strong> (15 ÷ 365) se usó factor fijo de 0.041 × ${totalDiasTranscurridos} días = ${diasAguinaldoProp.toFixed(2)} días × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
+                document.getElementById("procAguinaldo").innerHTML = `<strong>Factor manual:</strong> Factor de libreta de 0.041 × ${totalDiasTranscurridos} días reales = ${diasAguinaldoProp.toFixed(2)} días × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
 
                 document.getElementById("valTotalFiniquito").innerText = `${formatMoneda(granTotalFinal)} MXN`;
 
