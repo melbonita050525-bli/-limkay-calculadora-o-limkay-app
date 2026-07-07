@@ -286,7 +286,6 @@
             const resultsContent = document.getElementById("resultsContent");
             const seccionLiquidacion = document.getElementById("seccionLiquidacion");
 
-            // Cambiar etiqueta dinámica de salario según periodo seleccionado
             tipoPeriodo.addEventListener("change", () => {
                 const p = tipoPeriodo.value;
                 if(p === "mensual") labelSalario.innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Salario Bruto Mensual (MXN)`;
@@ -341,16 +340,15 @@
                 const motivo = document.getElementById("motivoSalida").value;
                 const diasVencidos = parseInt(document.getElementById("vacacionesPendientes").value) || 0;
 
-                // 1. OBTENER SALARIO DIARIO EXACTO (SD)
                 let salarioDiario = 0;
                 if (periodo === "mensual") salarioDiario = montoInput / 30;
                 else if (periodo === "quincenal") salarioDiario = montoInput / 15;
                 else if (periodo === "catorcenal") salarioDiario = montoInput / 14;
 
-                // 2. CÁLCULO ESTRICTO DE TIEMPO (Antigüedad)
                 const msPorDia = 24 * 60 * 60 * 1000;
                 const totalDiasTranscurridos = Math.round((fSalida - fIngreso) / msPorDia) + 1;
 
+                // CORRECCIÓN DE LA CORRESPONDENCIA DE ANTIGÜEDAD (Formateo exacto de meses)
                 let anios = fSalida.getFullYear() - fIngreso.getFullYear();
                 let meses = fSalida.getMonth() - fIngreso.getMonth();
                 let dias = fSalida.getDate() - fIngreso.getDate() + 1;
@@ -364,11 +362,19 @@
                     anios--; 
                     meses += 12; 
                 }
+                
+                // Si el cálculo de días alcanza o supera los 30 días comerciales por residuos de calendario, se ajusta a mes neto.
+                if (dias >= 30) {
+                    meses += Math.floor(dias / 30);
+                    dias = dias % 30;
+                }
+                if (meses >= 12) {
+                    anios += Math.floor(meses / 12);
+                    meses = meses % 12;
+                }
 
-                // Fracción de año completo para cálculos proporcionales matemáticos
                 const factorAntiguedadExacta = totalDiasTranscurridos / 365;
 
-                // 3. TABLA DE VACACIONES LFT VIGENTE
                 let diasVacacionesDerecho = 12;
                 if (anios === 1) diasVacacionesDerecho = 14;
                 else if (anios === 2) diasVacacionesDerecho = 16;
@@ -379,7 +385,6 @@
                 else if (anios >= 15 && anios <= 19) diasVacacionesDerecho = 26;
                 else if (anios >= 20) diasVacacionesDerecho = 28;
 
-                // 4. DIAS TRABAJADOS EN EL ÚLTIMO AÑO CORRIENTE (Para Vacaciones Proporcionales)
                 let ultimoAniversario = new Date(fIngreso.getTime());
                 ultimoAniversario.setFullYear(fSalida.getFullYear());
                 if (ultimoAniversario > fSalida) {
@@ -387,18 +392,11 @@
                 }
                 const diasAñoCorriente = Math.round((fSalida - ultimoAniversario) / msPorDia) + 1;
 
-                // 5. CALCULO DE PRESTACIONES DEVENGADAS
-                // Vacaciones Proporcionales
                 let diasVacProporcionales = (diasVacacionesDerecho / 365) * diasAñoCorriente;
                 let montoVacacionesProp = diasVacProporcionales * salarioDiario;
-
-                // Vacaciones Vencidas
                 let montoVacacionesVencidas = diasVencidos * salarioDiario;
-
-                // Prima Vacacional (25%)
                 let montoPrimaVacacional = (montoVacacionesProp + montoVacacionesVencidas) * 0.25;
 
-                // Aguinaldo Proporcional (Días transcurridos en el año civil actual)
                 const inicioAñoCivil = new Date(fSalida.getFullYear(), 0, 1);
                 const fechaBaseAguinaldo = fIngreso > inicioAñoCivil ? fIngreso : inicioAñoCivil;
                 const diasAñoAguinaldo = Math.round((fSalida - fechaBaseAguinaldo) / msPorDia) + 1;
@@ -406,15 +404,11 @@
                 let diasAguinaldoProp = (15 / 365) * diasAñoAguinaldo;
                 let montoAguinaldo = diasAguinaldoProp * salarioDiario;
 
-                // SUB-TOTAL FINIQUITO DE LEY
                 let subtotalFiniquito = montoVacacionesProp + montoVacacionesVencidas + montoPrimaVacacional + montoAguinaldo;
 
-                // 6. CÁLCULO DE SALARIO DIARIO INTEGRADO (SDI) PARA LIQUIDACIÓN
-                // Integración básica ordinaria: Aguinaldo (15 días) + Prima Vacacional (25% de los días de vac. del año actual)
                 let factorIntegracion = 1 + (15 / 365) + ((diasVacacionesDerecho * 0.25) / 365);
                 let SDI = salarioDiario * factorIntegracion;
 
-                // 7. SI ES DESPIDO: CALCULAR CONCEPTOS DE INDEMNIZACIÓN
                 let montoIndemConstitucional = 0;
                 let montoIndem20Dias = 0;
                 let montoPrimaAntiguedad = 0;
@@ -425,16 +419,10 @@
                     document.getElementById("badgeTipoConcepto").className = "badge badge-alert";
                     document.getElementById("labelTotal").innerText = "TOTAL LIQUIDACIÓN NETA ESTIMADA";
 
-                    // Indemnización 3 meses (90 días fijos de SDI)
                     montoIndemConstitucional = 90 * SDI;
-
-                    // 20 días de salario por cada año de servicios prestados (proporcional continuo)
                     montoIndem20Dias = 20 * SDI * factorAntiguedadExacta;
-
-                    // Prima de Antigüedad: 12 días por año (Se topa a un máx de 2 salarios mínimos, usaremos simulación base SDI directo para aproximación)
                     montoPrimaAntiguedad = 12 * SDI * factorAntiguedadExacta;
 
-                    // Renderizar procesos de liquidación
                     document.getElementById("procIndemConstitucional").innerHTML = `<strong>Art. 48 LFT:</strong> 90 días × $${SDI.toFixed(2)} (SDI)<div>= $${montoIndemConstitucional.toFixed(2)}</div>`;
                     document.getElementById("procIndem20Dias").innerHTML = `<strong>Art. 50 LFT:</strong> 20 días × $${SDI.toFixed(2)} (SDI) × ${factorAntiguedadExacta.toFixed(4)} años de antigüedad flotante<div>= $${montoIndem20Dias.toFixed(2)}</div>`;
                     document.getElementById("procPrimaAntiguedad").innerHTML = `<strong>Art. 162 LFT:</strong> 12 días × $${SDI.toFixed(2)} (SDI) × ${factorAntiguedadExacta.toFixed(4)} años cumplidos/proporcionales<div>= $${montoPrimaAntiguedad.toFixed(2)}</div>`;
@@ -445,17 +433,14 @@
                     document.getElementById("labelTotal").innerText = "TOTAL FINIQUITO NETO ESTIMADO";
                 }
 
-                // TOTAL ACUMULADO
                 let granTotalFinal = subtotalFiniquito + montoIndemConstitucional + montoIndem20Dias + montoPrimaAntiguedad;
 
-                // 8. DESPLEGAR DATOS E INTERFAZ
                 document.getElementById("outNombre").innerText = nombre;
                 document.getElementById("outAntiguedadText").innerText = `${anios} años, ${meses} meses, ${dias} días`;
                 document.getElementById("outDiasTotales").innerText = totalDiasTranscurridos;
                 document.getElementById("outSD").innerText = formatMoneda(salarioDiario);
                 document.getElementById("outSDI").innerText = formatMoneda(SDI);
 
-                // Inyecciones en renglones ordinarios
                 document.getElementById("valVacaciones").innerText = formatMoneda(montoVacacionesProp);
                 document.getElementById("procVacaciones").innerHTML = `<strong>Proporcional año actual:</strong> (${diasVacacionesDerecho} días de ley ÷ 365) × ${diasAñoCorriente} días laborados en el periodo × $${salarioDiario.toFixed(2)} (SD)<div>= $${montoVacacionesProp.toFixed(2)}</div>`;
 
@@ -473,7 +458,6 @@
                 document.getElementById("valAguinaldo").innerText = formatMoneda(montoAguinaldo);
                 document.getElementById("procAguinaldo").innerHTML = `<strong>Aguinaldo Proporcional:</strong> (15 días de ley ÷ 365) × ${diasAñoAguinaldo} días del año corriente transcurridos × $${salarioDiario.toFixed(2)} (SD)<div>= $${montoAguinaldo.toFixed(2)}</div>`;
 
-                // Renderizar montos finales
                 document.getElementById("valIndemConstitucional").innerText = formatMoneda(montoIndemConstitucional);
                 document.getElementById("valIndem20Dias").innerText = formatMoneda(montoIndem20Dias);
                 document.getElementById("valPrimaAntiguedad").innerText = formatMoneda(montoPrimaAntiguedad);
