@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         document.getElementById("valPrimaVacacional").innerText = formatMoneda(montoPrimaVacacional);
-        document.getElementById("procPrimaVacacional").innerHTML = `<strong>Fórmula del Pintarrón (D.C. × SD × .25):</strong> ${diasQueCorresponden} días correspondientes × $${salarioDiario.toFixed(2)} (SD) × 0.25<div>= $${montoPrimaVacacional.toFixed(2)}</div>`;
+        document.getElementById("procPrimaVacacional").innerHTML = `<strong>Fórmula del Pintarrón (D.C. × SD × .25):</strong> ${diasQueCorresponden} dias correspondientes × $${salarioDiario.toFixed(2)} (SD) × 0.25<div>= $${montoPrimaVacacional.toFixed(2)}</div>`;
 
         document.getElementById("valAguinaldo").innerText = formatMoneda(montoAguinaldo);
         document.getElementById("procAguinaldo").innerHTML = `<strong>Fórmula (${aguinaldoBaseInput} días):</strong> (${aguinaldoBaseInput} ÷ 365) = ${factorAguinaldoFijo.toFixed(4)} × ${totalDiasTranscurridos} días = ${diasAguinaldoProp.toFixed(2)} días × $${salarioDiario.toFixed(2)}<div>= $${montoAguinaldo.toFixed(2)}</div>`;
@@ -232,8 +232,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(cant);
     }
 
+    // FUNCIÓN DE LIMPIEZA COMPLETAMENTE CORREGIDA
     function limpiarFormulario() {
-        form.reset();
+        document.getElementById("finiquitoForm").reset();
         labelFechaSalida.innerHTML = `<i class="fa-solid fa-calendar-minus"></i> Fecha de Salida`;
         emptyState.style.display = "block";
         resultsContent.style.display = "none";
