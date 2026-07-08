@@ -5,13 +5,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const motivoSalida = document.getElementById("motivoSalida");
     const btnCalcular = document.getElementById("btnCalcular");
     const btnLimpiar = document.getElementById("btnLimpiar");
-    const form = document.getElementById("finiquitoForm");
     const emptyState = document.getElementById("emptyState");
     const resultsContent = document.getElementById("resultsContent");
     
-    let chartInstance = null; // Guardar referencia de la gráfica para actualizarla
+    let chartInstance = null;
 
-    // Cambiar dinámicamente etiquetas de texto según selección
     tipoPeriodo.addEventListener("change", () => {
         const p = tipoPeriodo.value;
         if(p === "mensual") labelSalario.innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Salario Bruto Mensual (MXN)`;
@@ -19,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if(p === "catorcenal") labelSalario.innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Salario Bruto Catorcenal (MXN)`;
     });
 
+    // Detectar cuando cambia a Trabajador Activo para ajustar los textos del formulario al instante
     motivoSalida.addEventListener("change", () => {
         if(motivoSalida.value === "activo") {
             labelFechaSalida.innerHTML = `<i class="fa-solid fa-calendar-check"></i> Fecha de Corte / Consulta`;
@@ -45,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         if (fSalida < fIngreso) {
-            alert("La fecha de corte/salida no puede ser menor a la de ingreso.");
+            alert("La fecha de corte o salida no puede ser menor a la de ingreso.");
             return;
         }
 
@@ -79,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (antiguedadAniosExactos >= 31 && antiguedadAniosExactos < 36) diasQueCorresponden = 30;
         else if (antiguedadAniosExactos >= 36) diasQueCorresponden = 32;
 
-        // 1. Vacaciones Proporcionales
+        // 1. Vacaciones Proporcionales / Acumuladas
         let factorVacaciones = diasQueCorresponden / 365;
         let diasVacProporcionalesNoRedondeado = factorVacaciones * totalDiasTranscurridos; 
         let diasVacProporcionales = Math.round(diasVacProporcionalesNoRedondeado); 
@@ -90,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // FÓRMULA DEL PINTARRÓN: Días correspondientes según la tabla de antigüedad × SD × 0.25
         let montoPrimaVacacional = diasQueCorresponden * salarioDiario * 0.25;
 
-        // 2. Aguinaldo Proporcional
+        // 2. Aguinaldo Proporcional / Acumulado
         let factorAguinaldoFijo = aguinaldoBaseInput / 365; 
         let diasAguinaldoProp = factorAguinaldoFijo * totalDiasTranscurridos; 
         let montoAguinaldo = diasAguinaldoProp * salarioDiario; 
@@ -98,8 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
         let subtotalBase = montoVacacionesProp + montoVacacionesVencidas + montoPrimaVacacional + montoAguinaldo;
         let granTotalFinal = subtotalBase;
 
-        // Montos para la gráfica
-        let labelsGrafica = ['Vacaciones Prop.', 'Prima Vacacional', 'Aguinaldo Prop.'];
+        // Etiquetas base para la gráfica de dona
+        let labelsGrafica = ['Vacaciones', 'Prima Vacacional', 'Aguinaldo'];
         let datosGrafica = [montoVacacionesProp, montoPrimaVacacional, montoAguinaldo];
         let coloresGrafica = ['#38bdf8', '#fbbf24', '#f43f5e'];
 
@@ -109,12 +108,27 @@ document.addEventListener("DOMContentLoaded", () => {
             coloresGrafica.push('#a855f7');
         }
 
-        // ASIGNACIÓN DE CONTENIDOS SEGÚN EL CASO SELECCIONADO
-        if (motivo === "despido") {
+        // CAMBIO ESTRATÉGICO DE TEXTOS SEGÚN EL MODO (DESPIDO / ACTIVO / RENUNCIA)
+        if (motivo === "activo") {
+            document.getElementById("tituloResultadosPrincipal").innerHTML = `<i class="fa-solid fa-eye"></i> Consulta de Prestaciones Vigentes`;
+            document.getElementById("badgeTipoConcepto").innerText = "Trabajador Activo";
+            document.getElementById("labelGranTotal").innerText = "TOTAL ACUMULADO VIGENTE";
+            document.getElementById("tituloSeccionPrestaciones").innerText = "Prestaciones acumuladas a la fecha";
+            document.getElementById("lblAntiguedad").innerText = "Tiempo Laborado:";
+            document.getElementById("lblVacacionesTexto").innerHTML = `<i class="fa-solid fa-plane"></i> Vacaciones Generadas (Al corte)`;
+            document.getElementById("lblAguinaldoTexto").innerHTML = `<i class="fa-solid fa-gift"></i> Aguinaldo Acumulado`;
+            document.getElementById("bloqueLiquidacion").style.display = "none";
+            
+            document.getElementById("legalText").innerText = "Consulta informativa para empleados activos. Refleja los derechos mínimos vigentes acumulados por ley en Vacaciones (Art. 76), Prima Vacacional (Art. 80) y Aguinaldo (Art. 87) sin simular terminación de contrato.";
+        } 
+        else if (motivo === "despido") {
+            document.getElementById("tituloResultadosPrincipal").innerHTML = `<i class="fa-solid fa-file-invoice-dollar"></i> Desglose de Prestaciones`;
             document.getElementById("badgeTipoConcepto").innerText = "Liquidación de Ley";
             document.getElementById("labelGranTotal").innerText = "TOTAL LIQUIDACIÓN NETO ESTIMADO";
             document.getElementById("tituloSeccionPrestaciones").innerText = "Prestaciones Devengadas (Finiquito)";
             document.getElementById("lblAntiguedad").innerText = "Antigüedad Real:";
+            document.getElementById("lblVacacionesTexto").innerHTML = `<i class="fa-solid fa-plane"></i> Vacaciones Proporcionales (Redondeado)`;
+            document.getElementById("lblAguinaldoTexto").innerHTML = `<i class="fa-solid fa-gift"></i> Aguinaldo Proporcional`;
             document.getElementById("bloqueLiquidacion").style.display = "block";
 
             let montoTresMeses = salarioDiario * 30 * 3;
@@ -123,7 +137,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             granTotalFinal += (montoTresMeses + montoVeinteDias + montoPrimaAntiguedad);
 
-            // Agregar a la gráfica
             labelsGrafica.push('Indemnización 3 Meses', '20 Días por Año', 'Prima Antigüedad');
             datosGrafica.push(montoTresMeses, montoVeinteDias, montoPrimaAntiguedad);
             coloresGrafica.push('#10b981', '#f97316', '#64748b');
@@ -139,26 +152,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.getElementById("legalText").innerText = "Al tratarse de un Despido Injustificado, corresponde Finiquito base (Arts. 76, 80 y 87) más la Indemnización Constitucional (Art. 48), 20 días por año (Art. 50) y Prima de Antigüedad (Art. 162).";
         } 
-        else if (motivo === "activo") {
-            document.getElementById("badgeTipoConcepto").innerText = "Trabajador Activo";
-            document.getElementById("labelGranTotal").innerText = "PRESTACIONES ACUMULADAS A LA FECHA";
-            document.getElementById("tituloSeccionPrestaciones").innerText = "Prestaciones Acumuladas al Día";
-            document.getElementById("lblAntiguedad").innerText = "Tiempo Laborado Efectivo:";
-            document.getElementById("bloqueLiquidacion").style.display = "none";
-            
-            document.getElementById("legalText").innerText = "Cálculo informativo para un trabajador vigente en la empresa. Muestra los montos acumulados por concepto de Vacaciones (Art. 76), Prima Vacacional (Art. 80) y Aguinaldo Proporcional (Art. 87) acumulados al día de hoy.";
-        } 
         else {
+            document.getElementById("tituloResultadosPrincipal").innerHTML = `<i class="fa-solid fa-file-invoice-dollar"></i> Desglose de Prestaciones`;
             document.getElementById("badgeTipoConcepto").innerText = "Finiquito Estimado";
             document.getElementById("labelGranTotal").innerText = "TOTAL FINIQUITO NETO ESTIMADO";
             document.getElementById("tituloSeccionPrestaciones").innerText = "Prestaciones Devengadas (Finiquito)";
             document.getElementById("lblAntiguedad").innerText = "Antigüedad Real:";
+            document.getElementById("lblVacacionesTexto").innerHTML = `<i class="fa-solid fa-plane"></i> Vacaciones Proporcionales (Redondeado)`;
+            document.getElementById("lblAguinaldoTexto").innerHTML = `<i class="fa-solid fa-gift"></i> Aguinaldo Proporcional`;
             document.getElementById("bloqueLiquidacion").style.display = "none";
             
             document.getElementById("legalText").innerText = "Por Renuncia Voluntaria, corresponde la parte proporcional de prestaciones devengadas: Vacaciones (Art. 76), Prima Vacacional mínima (Art. 80) y Aguinaldo Proporcional (Art. 87).";
         }
 
-        // Imprimir desgloses bases recurrentes
+        // Renderizado de desgloses matemáticos comunes
         document.getElementById("valVacaciones").innerText = formatMoneda(montoVacacionesProp);
         document.getElementById("procVacaciones").innerHTML = `<strong>Fórmula:</strong> (${diasQueCorresponden} ÷ 365) = ${factorVacaciones.toFixed(4)} × ${totalDiasTranscurridos} días = ${diasVacProporcionalesNoRedondeado.toFixed(3)} días -> Redondeado a ${diasVacProporcionales} días × $${salarioDiario.toFixed(2)}<div>= $${montoVacacionesProp.toFixed(2)}</div>`;
 
@@ -185,9 +192,9 @@ document.addEventListener("DOMContentLoaded", () => {
         emptyState.style.display = "none";
         resultsContent.style.display = "block";
 
-        // CONFIGURACIÓN Y RENDERIZADO DE LA GRÁFICA DINÁMICA
+        // CONFIGURACIÓN DE LA GRÁFICA DE DONA
         const ctx = document.getElementById('montoChart').getContext('2d');
-        if (chartInstance) { chartInstance.destroy(); } // Borrar gráfica vieja antes de redibujar
+        if (chartInstance) { chartInstance.destroy(); }
 
         chartInstance = new Chart(ctx, {
             type: 'doughnut',
